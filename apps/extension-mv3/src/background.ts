@@ -220,6 +220,7 @@ chrome.runtime.onMessage.addListener((message: Record<string, unknown>, _sender,
       case 'consent.set': {
         state.consent_enabled = Boolean(message.enabled);
         await persistState();
+        emitHelloUpdate();
         sendResponse({ ok: true, state: toUiState() });
         return;
       }
@@ -234,6 +235,7 @@ chrome.runtime.onMessage.addListener((message: Record<string, unknown>, _sender,
         }
         state.ui_capture_enabled = enabled;
         await persistState();
+        emitHelloUpdate();
         sendResponse({ ok: true, state: toUiState() });
         return;
       }
@@ -741,6 +743,10 @@ function sendControlEnvelope<TPayload>(envelope: ControlEnvelopeV1<TPayload>): v
     state.connection_status = 'disconnected';
     void persistState();
   }
+}
+
+function emitHelloUpdate(): void {
+  sendControlEnvelope(makeHelloEvent(buildHelloPayload()));
 }
 
 function buildHelloPayload() {

@@ -1,8 +1,8 @@
 # DevTools Translator
 
-[![Main Branch](https://img.shields.io/badge/branch-main-0b7285)](https://github.com/saagar210/DevToolsTranslator/tree/main)
-[![Desktop Release CI](https://img.shields.io/github/actions/workflow/status/saagar210/DevToolsTranslator/release-internal-beta.yml?branch=main&label=desktop%20release%20ci)](https://github.com/saagar210/DevToolsTranslator/actions/workflows/release-internal-beta.yml)
-[![Perf & Reliability](https://img.shields.io/github/actions/workflow/status/saagar210/DevToolsTranslator/perf-reliability-regression.yml?branch=main&label=perf%20%26%20reliability)](https://github.com/saagar210/DevToolsTranslator/actions/workflows/perf-reliability-regression.yml)
+[![Main Branch](https://img.shields.io/badge/branch-main-0b7285)](https://github.com/saagpatel/DevToolsTranslator/tree/main)
+[![Desktop Release CI](https://img.shields.io/github/actions/workflow/status/saagpatel/DevToolsTranslator/release-internal-beta.yml?branch=main&label=desktop%20release%20ci)](https://github.com/saagpatel/DevToolsTranslator/actions/workflows/release-internal-beta.yml)
+[![Perf & Reliability](https://img.shields.io/github/actions/workflow/status/saagpatel/DevToolsTranslator/perf-reliability-regression.yml?branch=main&label=perf%20%26%20reliability)](https://github.com/saagpatel/DevToolsTranslator/actions/workflows/perf-reliability-regression.yml)
 
 Turn noisy DevTools activity into a clear story you can actually use.
 
@@ -110,12 +110,14 @@ It helps you move from “I have logs” to “I understand what happened.”
 - `fixtures`: raw fixtures + expected snapshots
 - `docs/SPEC_LOCK.md`: authoritative specification
 
-## Developer Setup (Advanced)
+## Local Launch (Validated)
 
-1. Install dependencies:
+This repo now has a confirmed local desktop launch path on macOS.
+
+1. Install workspace dependencies:
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 ```
 
 2. Confirm Rust is available:
@@ -124,17 +126,45 @@ pnpm install
 cargo --version
 ```
 
-3. Build extension:
+3. Build the desktop UI bundle:
+
+```bash
+pnpm --filter @dtt/desktop-ui build
+```
+
+4. Build the Chrome extension:
 
 ```bash
 pnpm --filter @dtt/extension build
 ```
 
-4. Load extension from:
+5. Launch the real desktop shell:
+
+```bash
+cargo run -p dtt-desktop-core --features desktop_shell
+```
+
+6. Load the unpacked extension from:
 
 - `apps/extension-mv3/dist`
 
-5. Run desktop UI (dev):
+7. In the extension popup:
+
+- Click `Find Desktop App`
+- Click `Connect`
+- Enable `I allow capture for this browser`
+
+8. In the desktop app:
+
+- Open `Live Capture`
+- Click `Refresh Capture State`
+- Start capture on a tab
+- Use the tab briefly, then click `Stop Capture`
+- Review the session from `Sessions`
+
+## Developer Setup (Advanced)
+
+- Desktop UI only:
 
 ```bash
 pnpm --filter @dtt/desktop-ui dev
@@ -164,4 +194,5 @@ Run the full required gate set from that file before claiming done-state.
 ## Status Snapshot
 
 - Core capture, normalization, correlation, detectors, UI, export, and hardening flows are implemented.
-- Current focus is continued rollout/release operations and usability refinement.
+- Local-beta setup and launch have been validated on macOS with the desktop shell + unpacked MV3 extension flow above.
+- Current focus is continued rollout/release operations, usability refinement, and remaining manual release gates.

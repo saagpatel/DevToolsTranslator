@@ -125,6 +125,12 @@ pub fn create_pairing_context() -> Result<PairingContext> {
     Ok(PairingContext { port: pick_pairing_port()?, token: generate_pairing_token() })
 }
 
+pub fn open_desktop_storage(path: impl AsRef<Path>) -> Result<Storage> {
+    let mut storage = Storage::open(path)?;
+    storage.apply_migrations()?;
+    Ok(storage)
+}
+
 pub fn create_pairing_context_from_storage(storage: &Storage) -> Result<PairingContext> {
     let (preferred_port, token) = match storage.get_pairing_context()? {
         Some((port, token)) => (Some(port), token),
@@ -2020,9 +2026,9 @@ fn has_manual_smoke_pass() -> bool {
 mod tests {
     use super::ws_bridge::BridgeError;
     use super::{
-        crate_identity, create_pairing_context, generate_pairing_token, pick_pairing_port,
-        start_ws_bridge, DesktopIngestService, LocalWsServer, PairingContext, PAIRING_PORT_MAX,
-        PAIRING_PORT_MIN,
+        crate_identity, create_pairing_context, create_pairing_context_from_storage,
+        generate_pairing_token, open_desktop_storage, pick_pairing_port, start_ws_bridge,
+        DesktopIngestService, LocalWsServer, PairingContext, PAIRING_PORT_MAX, PAIRING_PORT_MIN,
     };
     use dtt_storage::Storage;
     use futures_util::{SinkExt, StreamExt};
@@ -2070,6 +2076,19 @@ mod tests {
         let context = create_pairing_context().expect("create context");
         assert!(context.ws_url().starts_with("ws://127.0.0.1:"));
         assert!(context.ws_url().contains("/ws?token="));
+    }
+
+    #[test]
+    fn desktop_storage_bootstrap_supports_pairing_context_on_fresh_db() {
+        let db_path = std::env::temp_dir()
+            .join(format!("dtt-bootstrap-{}.sqlite3", generate_pairing_token()));
+        let storage = open_desktop_storage(&db_path).expect("bootstrap storage");
+        let context = create_pairing_context_from_storage(&storage).expect("pairing context");
+
+        assert!((PAIRING_PORT_MIN..=PAIRING_PORT_MAX).contains(&context.port));
+        assert_eq!(context.token.len(), 32);
+
+        let _ = std::fs::remove_file(db_path);
     }
 
     #[test]

@@ -7,7 +7,7 @@
     "host_permission_inventory",
     "version_monotonicity"
   ],
-  "permission_allowlist": ["debugger", "storage", "tabs", "scripting"],
+  "permission_allowlist": ["debugger", "storage", "tabs", "scripting", "sidePanel"],
   "required_artifacts": [
     "docs/RELEASE_RUNBOOK.md",
     "docs/INCIDENT_RUNBOOK.md",

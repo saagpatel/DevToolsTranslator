@@ -85,3 +85,41 @@ Date: 2026-02-22
   - CWS credentials
   - updater signature input
 - Interactive browser checklist remains the only human-required gate before non-dry-run promotion.
+
+## Local Beta Validation Update (2026-03-14)
+- macOS local-beta recovery and smoke were re-run against the real desktop shell and unpacked MV3 extension.
+
+### Automated Local Smoke Completed
+1. `pnpm install --frozen-lockfile`: PASS
+2. `pnpm --filter @dtt/desktop-ui build`: PASS
+3. `pnpm --filter @dtt/extension build`: PASS
+4. `cargo run -p dtt-desktop-core --features desktop_shell`: PASS after startup fix for fresh-db migration bootstrap.
+5. Extension discovery + connect against live desktop app: PASS
+6. Consent toggle propagation into Live Capture: PASS after fix; no reconnect workaround required
+7. Live Capture refresh shows eligible browser tab: PASS
+8. Start capture -> browser activity -> stop capture: PASS
+9. Session persistence + normalize/correlate/analyze pipeline: PASS
+10. Share-safe export generation: PASS
+
+### Evidence Snapshot
+- Runtime DB file observed at:
+  `/var/folders/gf/3t3h93q52d1fj7d_tldckr6r0000gn/T/dtt-desktop.sqlite3`
+- Bridge diagnostics confirmed:
+  - `connected=true consent=true ui_capture=false`
+  - `session_close_pipeline_ok`
+- Session rows confirmed in `sessions`.
+- Export row confirmed in `exports_runs` with:
+  - `export_profile=share_safe`
+  - `status=completed`
+  - `integrity_ok=1`
+
+### Bug Fixed During This Run
+1. Desktop startup on a fresh machine crashed before migrations were applied.
+- Fix: bootstrap desktop storage before pairing-context lookup.
+2. Live Capture consent state stayed stale until extension reconnect.
+- Fix: extension now emits a fresh `evt.hello` update when consent or UI-capture settings change.
+
+### Manual Browser Smoke Status
+- Human interactive release sign-off remains open.
+- Current marker status:
+`interactive_chrome_manual: not_run|date=2026-03-14|observer=codex_shell`

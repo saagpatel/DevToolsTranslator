@@ -16,5 +16,5 @@ license = "UNLICENSED"
 version = "0.1.0"
 
 [workspace.metadata.devtools-translator]
-mode = "scaffold_only"
-notes = "No implementation code in this scaffold run"
+mode = "local_beta"
+notes = "Implemented desktop app + MV3 extension with validated local launch and smoke path"

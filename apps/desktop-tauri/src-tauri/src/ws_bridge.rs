@@ -613,6 +613,7 @@ async fn run_ws_runtime(
     Ok(())
 }
 
+#[allow(clippy::result_large_err)]
 async fn accept_with_auth_or_discovery(
     stream: tokio::net::TcpStream,
     token: String,

@@ -2,7 +2,7 @@
   "name": "devtools-translator",
   "private": true,
   "version": "0.1.0",
-  "description": "DevTools Translator scaffold and documentation pack",
+  "description": "DevTools Translator local-first desktop app and Chrome extension",
   "packageManager": "pnpm@10",
   "scripts": {
     "lint": "pnpm -r --if-present lint",
