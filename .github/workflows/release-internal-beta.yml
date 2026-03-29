@@ -131,25 +131,25 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download mac artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: internal-beta-${{ inputs.version }}-macos
           path: dist/releases/internal-beta/${{ inputs.version }}/desktop
 
       - name: Download windows artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: internal-beta-${{ inputs.version }}-windows
           path: dist/releases/internal-beta/${{ inputs.version }}/desktop-windows
 
       - name: Download linux artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: internal-beta-${{ inputs.version }}-linux
           path: dist/releases/internal-beta/${{ inputs.version }}/desktop-linux
 
       - name: Download extension artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: internal-beta-${{ inputs.version }}-extension
           path: dist/releases/internal-beta/${{ inputs.version }}/extension
