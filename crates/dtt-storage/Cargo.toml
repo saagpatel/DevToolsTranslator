@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-blake3 = "1.5"
+blake3 = "1.8"
 dtt-correlation = { path = "../dtt-correlation" }
 dtt-core = { path = "../dtt-core" }
 dtt-detectors = { path = "../dtt-detectors" }

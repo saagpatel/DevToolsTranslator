@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-blake3 = "1.5"
+blake3 = "1.8"
 dtt-core = { path = "../dtt-core" }
 regex = "1.12"
 rusqlite = { version = "0.32", features = ["bundled"] }
