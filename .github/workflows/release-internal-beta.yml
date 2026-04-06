@@ -71,7 +71,7 @@ jobs:
           fi
 
       - name: Upload desktop artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: internal-beta-${{ inputs.version }}-${{ matrix.platform }}
           path: dist/releases/internal-beta/${{ inputs.version }}/${{ matrix.output_dir }}
@@ -112,7 +112,7 @@ jobs:
           fi
 
       - name: Upload extension artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: internal-beta-${{ inputs.version }}-extension
           path: dist/releases/internal-beta/${{ inputs.version }}/extension
@@ -184,7 +184,7 @@ jobs:
           NODE
 
       - name: Upload combined release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: internal-beta-${{ inputs.version }}-combined
           path: dist/releases/internal-beta/${{ inputs.version }}

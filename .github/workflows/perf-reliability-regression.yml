@@ -89,7 +89,7 @@ jobs:
           LANE: ${{ matrix.lane }}
 
       - name: Upload perf report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: perf-gate-report-${{ matrix.lane }}
           path: |

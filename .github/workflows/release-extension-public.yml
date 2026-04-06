@@ -105,7 +105,7 @@ jobs:
           fi
 
       - name: Upload extension public artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: extension-public-${{ inputs.version }}-${{ inputs.stage }}
           path: dist/releases/chrome-store-public/${{ inputs.version }}
