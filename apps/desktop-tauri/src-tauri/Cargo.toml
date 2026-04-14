@@ -17,7 +17,7 @@ dtt-export = { path = "../../../crates/dtt-export" }
 dtt-integrity = { path = "../../../crates/dtt-integrity" }
 dtt-storage = { path = "../../../crates/dtt-storage" }
 futures-util = "0.3"
-rand = "0.8"
+rand = "0.9"
 serde_json = "1.0"
 serde_json_canonicalizer = "0.3"
 sha2 = "0.10"
