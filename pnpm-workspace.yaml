@@ -2,3 +2,5 @@ packages:
   - apps/*
   - apps/desktop-tauri/ui
   - packages/*
+allowBuilds:
+  esbuild: true
