@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "DevTools Translator local-first desktop app and Chrome extension",
-  "packageManager": "pnpm@10",
+  "packageManager": "pnpm@11.1.2",
   "scripts": {
     "lint": "pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",

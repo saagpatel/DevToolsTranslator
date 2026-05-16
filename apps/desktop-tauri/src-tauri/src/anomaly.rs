@@ -14,7 +14,7 @@ pub struct AnomalyCandidate {
 
 pub fn detect_anomalies(points: &[UiPerfTrendPointV1]) -> Vec<AnomalyCandidate> {
     let mut sorted = points.to_vec();
-    sorted.sort_by(|left, right| left.bucket_start_ms.cmp(&right.bucket_start_ms));
+    sorted.sort_by_key(|point| point.bucket_start_ms);
 
     let mut output = Vec::new();
     for index in 0..sorted.len() {
