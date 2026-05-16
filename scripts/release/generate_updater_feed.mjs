@@ -62,8 +62,9 @@ function main() {
   const feedDir = path.join(repoRoot, 'dist', 'releases', 'update-feed', channel);
   fs.mkdirSync(feedDir, { recursive: true });
 
-  const signature = process.env.UPDATER_SIGNATURE?.trim() || (dryRun ? 'dry_run_signature' : '');
-  const signatureVerified = signature.length > 0;
+  const configuredSignature = process.env.UPDATER_SIGNATURE?.trim() || '';
+  const signature = configuredSignature || (dryRun ? 'dry_run_signature' : '');
+  const signatureVerified = configuredSignature.length > 0;
   if (!dryRun && !signatureVerified) {
     process.stdout.write(
       `${JSON.stringify(
