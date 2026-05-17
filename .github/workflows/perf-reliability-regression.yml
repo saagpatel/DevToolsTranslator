@@ -10,16 +10,12 @@ on:
 jobs:
   perf-reliability:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        lane: [pr, nightly, weekly]
     if: |
-      (github.event_name == 'schedule' && (
-        (github.event.schedule == '0 6 * * *' && matrix.lane == 'nightly') ||
-        (github.event.schedule == '0 7 * * 0' && matrix.lane == 'weekly')
-      )) ||
-      (github.event_name != 'schedule' && matrix.lane == 'pr')
+      github.event_name != 'schedule' ||
+      github.event.schedule == '0 6 * * *' ||
+      github.event.schedule == '0 7 * * 0'
+    env:
+      PERF_LANE: ${{ github.event_name == 'schedule' && github.event.schedule == '0 7 * * 0' && 'weekly' || github.event_name == 'schedule' && 'nightly' || 'pr' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,9 +47,9 @@ jobs:
 
       - name: Run endurance suite
         run: |
-          if [[ "${{ matrix.lane }}" == "weekly" ]]; then
+          if [[ "$PERF_LANE" == "weekly" ]]; then
             node scripts/perf/run_endurance_suite.mjs --mode weekly > perf-endurance-report.json
-          elif [[ "${{ matrix.lane }}" == "nightly" ]]; then
+          elif [[ "$PERF_LANE" == "nightly" ]]; then
             node scripts/perf/run_endurance_suite.mjs --mode nightly > perf-endurance-report.json
           else
             node scripts/perf/run_endurance_suite.mjs --mode ci > perf-endurance-report.json
@@ -84,12 +80,12 @@ jobs:
           fs.writeFileSync('release-health-scorecard-inputs.json', `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
           NODE
         env:
-          LANE: ${{ matrix.lane }}
+          LANE: ${{ env.PERF_LANE }}
 
       - name: Upload perf report
         uses: actions/upload-artifact@v4
         with:
-          name: perf-gate-report-${{ matrix.lane }}
+          name: perf-gate-report-${{ env.PERF_LANE }}
           path: |
             perf-gate-report.json
             perf-endurance-report.json
