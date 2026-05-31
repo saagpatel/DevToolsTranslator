@@ -17,11 +17,13 @@ DevTools Translator captures browser events from a Chrome tab, organizes them in
 ## Quick Start
 
 ### Prerequisites
+
 - Rust toolchain (`rustup`)
-- Node.js 18+ and pnpm
+- Node.js 20+ and pnpm
 - Chrome browser
 
 ### Installation
+
 ```bash
 pnpm install --frozen-lockfile
 pnpm --filter @dtt/desktop-ui build
@@ -29,6 +31,7 @@ pnpm --filter @dtt/extension build
 ```
 
 ### Usage
+
 ```bash
 # Launch the desktop shell
 cargo run -p dtt-desktop-core --features desktop_shell
@@ -38,15 +41,15 @@ Then load the unpacked extension from `apps/extension-mv3/dist`, click **Find De
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Desktop runtime | Tauri 2 (Rust) |
-| Browser capture | Chrome MV3 extension |
-| Core engine | Rust crates: dtt-core, dtt-storage, dtt-correlation, dtt-detectors |
-| Storage | SQLite (SQLx) |
-| Desktop UI | React + TypeScript |
-| Integrity | BLAKE3 hashing |
-| Build | pnpm workspaces + Cargo workspace |
+| Layer           | Technology                                                                                    |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| Desktop runtime | Tauri 2 (Rust)                                                                                |
+| Browser capture | Chrome MV3 extension                                                                          |
+| Core engine     | Rust crates: dtt-core, dtt-storage, dtt-correlation, dtt-detectors, dtt-export, dtt-integrity |
+| Storage         | SQLite (SQLx)                                                                                 |
+| Desktop UI      | React + TypeScript                                                                            |
+| Integrity       | BLAKE3 hashing                                                                                |
+| Build           | pnpm workspaces + Cargo workspace                                                             |
 
 ## License
 

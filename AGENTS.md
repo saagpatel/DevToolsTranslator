@@ -1,4 +1,5 @@
 <!-- portfolio-context:start -->
+
 # Portfolio Context
 
 ## What This Project Is
@@ -11,15 +12,15 @@ Portfolio truth currently marks this project as `active` with `minimum-viable` c
 
 ## Stack
 
-| Layer | Technology |
-|-------|------------|
-| Desktop runtime | Tauri 2 (Rust) |
-| Browser capture | Chrome MV3 extension |
-| Core engine | Rust crates: dtt-core, dtt-storage, dtt-correlation, dtt-detectors |
-| Storage | SQLite (SQLx) |
-| Desktop UI | React + TypeScript |
-| Integrity | BLAKE3 hashing |
-| Build | pnpm workspaces + Cargo workspace |
+| Layer           | Technology                                                                                    |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| Desktop runtime | Tauri 2 (Rust)                                                                                |
+| Browser capture | Chrome MV3 extension                                                                          |
+| Core engine     | Rust crates: dtt-core, dtt-storage, dtt-correlation, dtt-detectors, dtt-export, dtt-integrity |
+| Storage         | SQLite (SQLx)                                                                                 |
+| Desktop UI      | React + TypeScript                                                                            |
+| Integrity       | BLAKE3 hashing                                                                                |
+| Build           | pnpm workspaces + Cargo workspace                                                             |
 
 ## How To Run
 
