@@ -44,8 +44,8 @@ function buildDefaultMeasured() {
       duration_ms: 6 * 60 * 60 * 1000,
     },
     sustained_capture_7d: {
-      sustained_capture_memory_peak_bytes: 1_450_000_000,
-      bundle_inspect_resolve_p95_ms: 310,
+      sustained_capture_memory_peak_bytes: 980_000_000,
+      bundle_inspect_resolve_p95_ms: 295,
       normalization_events_per_s: 2_100,
       duration_ms: 7 * 24 * 60 * 60 * 1000,
     },
