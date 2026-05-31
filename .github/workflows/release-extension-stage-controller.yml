@@ -37,13 +37,13 @@ jobs:
       RELEASE_DRY_RUN: ${{ github.event_name == 'schedule' && 'true' || inputs.dry_run }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
@@ -67,7 +67,7 @@ jobs:
           fi
 
       - name: Upload controller artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: extension-stage-controller-${{ env.RELEASE_VERSION }}-${{ env.RELEASE_STAGE }}
           path: dist/releases/chrome-store-public/${{ env.RELEASE_VERSION }}/controller

@@ -48,13 +48,13 @@ jobs:
       RELEASE_DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
@@ -72,7 +72,7 @@ jobs:
           fi
 
       - name: Upload desktop artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: internal-beta-${{ inputs.version }}-${{ matrix.platform }}
           path: dist/releases/internal-beta/${{ inputs.version }}/${{ matrix.output_dir }}
@@ -84,13 +84,13 @@ jobs:
       RELEASE_DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
@@ -111,7 +111,7 @@ jobs:
           fi
 
       - name: Upload extension artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: internal-beta-${{ inputs.version }}-extension
           path: dist/releases/internal-beta/${{ inputs.version }}/extension
@@ -127,28 +127,28 @@ jobs:
       RELEASE_DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download mac artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: internal-beta-${{ inputs.version }}-macos
           path: dist/releases/internal-beta/${{ inputs.version }}/desktop
 
       - name: Download windows artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: internal-beta-${{ inputs.version }}-windows
           path: dist/releases/internal-beta/${{ inputs.version }}/desktop-windows
 
       - name: Download linux artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: internal-beta-${{ inputs.version }}-linux
           path: dist/releases/internal-beta/${{ inputs.version }}/desktop-linux
 
       - name: Download extension artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: internal-beta-${{ inputs.version }}-extension
           path: dist/releases/internal-beta/${{ inputs.version }}/extension
@@ -183,7 +183,7 @@ jobs:
           NODE
 
       - name: Upload combined release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: internal-beta-${{ inputs.version }}-combined
           path: dist/releases/internal-beta/${{ inputs.version }}
