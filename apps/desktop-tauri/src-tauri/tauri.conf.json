@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.devtoolstranslator.desktop",
   "build": {
+    "beforeDevCommand": "pnpm --filter @dtt/desktop-ui dev -- --host 127.0.0.1 --port 1420",
     "beforeBuildCommand": "pnpm --filter @dtt/desktop-ui build",
+    "devUrl": "http://127.0.0.1:1420",
     "frontendDist": "../ui/.vite-dist"
   },
   "app": {
@@ -21,13 +23,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "app",
-      "dmg",
-      "msi",
-      "deb",
-      "appimage"
-    ],
+    "targets": ["app", "dmg", "msi", "deb", "appimage"],
     "macOS": {
       "hardenedRuntime": true
     }
@@ -35,9 +31,7 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "dtt"
-        ]
+        "schemes": ["dtt"]
       }
     }
   }

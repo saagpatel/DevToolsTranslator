@@ -1,1 +1,1 @@
-{}
+{"default":{"identifier":"default","description":"Main window capability for DevTools Translator desktop.","local":true,"windows":["main"],"permissions":["core:default"]}}

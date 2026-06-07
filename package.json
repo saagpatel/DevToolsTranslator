@@ -9,6 +9,7 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "build": "pnpm -r --if-present build",
+    "preview": "pnpm --filter @dtt/desktop-ui preview",
     "release:desktop:mac:dry-run": "node scripts/release/release_desktop_mac.mjs --dry-run",
     "release:desktop:mac": "node scripts/release/release_desktop_mac.mjs",
     "release:desktop:windows:dry-run": "node scripts/release/release_desktop_windows.mjs --dry-run",
