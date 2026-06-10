@@ -33,10 +33,10 @@ Then load the unpacked extension from `apps/extension-mv3/dist`, click **Find De
 
 ## Known Risks
 
-- This repo only has minimum-viable recovery context today; deeper handoff details may still live in the README and supporting docs.
+- The portfolio context is minimum-viable; verify current state from the README, workspace manifests, and supporting docs before expanding scope.
 
 ## Next Recommended Move
 
-Use this context plus the README and supporting docs to resume the next active task, then promote the repo beyond minimum-viable by capturing a dedicated handoff, roadmap, or discovery artifact.
+If work continues here, capture a small repo-specific handoff or roadmap only after verifying current live files.
 
 <!-- portfolio-context:end -->
