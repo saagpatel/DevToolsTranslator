@@ -661,9 +661,11 @@ mod tests {
             .query_row(
                 &format!("SELECT COUNT(1) FROM {table} WHERE session_id = ?1"),
                 params![session_id],
-                |row| row.get::<_, usize>(0),
+                |row| row.get::<_, i64>(0),
             )
             .expect("count rows")
+            .try_into()
+            .expect("row count fits usize")
     }
 
     fn dump_session_rows(storage: &Storage, session_id: &str) -> Vec<String> {
