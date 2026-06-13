@@ -64,7 +64,7 @@ pub fn build_sanitized_payload(samples: &[ReliabilityMetricSampleV1]) -> OtlpPay
     } else {
         let mut hasher = Sha256::new();
         hasher.update(ndjson.as_bytes());
-        Some(format!("{:x}", hasher.finalize()))
+        Some(hasher.finalize().iter().map(|byte| format!("{byte:02x}")).collect())
     };
 
     OtlpPayload { ndjson, redacted_count, payload_sha256 }

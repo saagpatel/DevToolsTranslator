@@ -4065,14 +4065,18 @@ impl Storage {
     #[must_use]
     pub fn session_count(&self) -> usize {
         self.conn
-            .query_row("SELECT COUNT(1) FROM sessions", [], |row| row.get::<_, usize>(0))
+            .query_row("SELECT COUNT(1) FROM sessions", [], |row| row.get::<_, i64>(0))
+            .unwrap_or(0)
+            .try_into()
             .unwrap_or(0)
     }
 
     #[must_use]
     pub fn events_raw_count(&self) -> usize {
         self.conn
-            .query_row("SELECT COUNT(1) FROM events_raw", [], |row| row.get::<_, usize>(0))
+            .query_row("SELECT COUNT(1) FROM events_raw", [], |row| row.get::<_, i64>(0))
+            .unwrap_or(0)
+            .try_into()
             .unwrap_or(0)
     }
 
@@ -7143,18 +7147,22 @@ mod tests {
                      JOIN interactions i ON i.interaction_id = im.interaction_id
                      WHERE i.session_id = ?1",
                     params![session_id],
-                    |row| row.get::<_, usize>(0),
+                    |row| row.get::<_, i64>(0),
                 )
-                .expect("count interaction member rows");
+                .expect("count interaction member rows")
+                .try_into()
+                .expect("row count fits usize");
         }
         storage
             .conn
             .query_row(
                 &format!("SELECT COUNT(1) FROM {table} WHERE session_id = ?1"),
                 params![session_id],
-                |row| row.get::<_, usize>(0),
+                |row| row.get::<_, i64>(0),
             )
             .expect("count table rows")
+            .try_into()
+            .expect("row count fits usize")
     }
 
     fn dump_correlated_rows(storage: &Storage, session_id: &str) -> Vec<String> {

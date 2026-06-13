@@ -43,7 +43,6 @@ use dtt_storage::{
     PerfAnomalyInsertInput, PersistedRawEvent, RolloutStageTransitionInput, Storage, StorageError,
     UpdateRolloutStartInput,
 };
-use rand::RngCore;
 use release::{build_release_artifacts, build_release_matrix_artifacts, read_bundle_summary};
 use std::net::{Ipv4Addr, SocketAddrV4, TcpListener};
 use std::path::{Path, PathBuf};
@@ -205,7 +204,7 @@ pub fn pick_pairing_port_preferred(preferred: Option<u16>) -> Result<u16> {
 #[must_use]
 pub fn generate_pairing_token() -> String {
     let mut bytes = [0_u8; 16];
-    rand::thread_rng().fill_bytes(&mut bytes);
+    rand::fill(&mut bytes[..]);
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
