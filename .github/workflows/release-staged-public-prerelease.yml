@@ -38,7 +38,7 @@ jobs:
       UPDATER_SIGNATURE: ${{ secrets.UPDATER_SIGNATURE }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Verify manual smoke evidence
         shell: bash
