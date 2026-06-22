@@ -34,8 +34,8 @@
     "format:write": "prettier --write \"**/*.{md,json,yml,yaml,ts,toml}\""
   },
   "devDependencies": {
-    "@types/chrome": "^0.1.43",
-    "prettier": "^3.8.3",
+    "@types/chrome": "^0.2.0",
+    "prettier": "^3.8.4",
     "typescript": "^5.7.2"
   }
 }
