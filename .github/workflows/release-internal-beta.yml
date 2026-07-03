@@ -48,7 +48,7 @@ jobs:
       RELEASE_DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -84,7 +84,7 @@ jobs:
       RELEASE_DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -127,7 +127,7 @@ jobs:
       RELEASE_DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download mac artifacts
         uses: actions/download-artifact@v8
