@@ -8,7 +8,7 @@ export interface DesktopAppProps {
   readonly client?: DesktopClient;
 }
 
-export function DesktopApp({ client }: DesktopAppProps): JSX.Element {
+export function DesktopApp({ client }: DesktopAppProps): React.JSX.Element {
   const resolvedClient = client ?? createDesktopClient();
   return (
     <BrowserRouter>
