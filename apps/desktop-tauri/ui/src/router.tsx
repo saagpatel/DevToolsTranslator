@@ -128,7 +128,7 @@ function useHighlightFromQuery(isReady: boolean): { fallbackNotice: string | nul
   return { fallbackNotice };
 }
 
-function LoadingState({ title }: { readonly title: string }): JSX.Element {
+function LoadingState({ title }: { readonly title: string }): React.JSX.Element {
   return <section className="state-card">Loading {title}…</section>;
 }
 
@@ -138,7 +138,7 @@ function ErrorState({
 }: {
   readonly message: string;
   readonly onRetry: () => void;
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <section className="state-card error" role="alert">
       <p>{message}</p>
@@ -154,8 +154,8 @@ function EmptyState({
   cta,
 }: {
   readonly message: string;
-  readonly cta?: JSX.Element;
-}): JSX.Element {
+  readonly cta?: React.JSX.Element;
+}): React.JSX.Element {
   return (
     <section className="state-card empty">
       <p>{message}</p>
@@ -186,7 +186,7 @@ function parseHelloFlags(
   };
 }
 
-function SessionsPage({ client }: AppDependencies): JSX.Element {
+function SessionsPage({ client }: AppDependencies): React.JSX.Element {
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
   const [rows, setRows] = useState<UiSessionListItemV1[]>([]);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -278,7 +278,7 @@ function SessionsPage({ client }: AppDependencies): JSX.Element {
   );
 }
 
-function LiveCapturePage({ client }: AppDependencies): JSX.Element {
+function LiveCapturePage({ client }: AppDependencies): React.JSX.Element {
   const [privacyMode, setPrivacyMode] = useState<RedactionLevel>('metadata_only');
   const [consentEnabled, setConsentEnabled] = useState(false);
   const [uiCaptureEnabled, setUiCaptureEnabled] = useState(false);
@@ -500,7 +500,7 @@ function LiveCapturePage({ client }: AppDependencies): JSX.Element {
   );
 }
 
-function FindingsPage({ client }: AppDependencies): JSX.Element {
+function FindingsPage({ client }: AppDependencies): React.JSX.Element {
   const navigate = useNavigate();
   const { setSelectedEvidence } = useEvidenceSelection();
   const [rows, setRows] = useState<UiFindingCardV1[]>([]);
@@ -591,7 +591,7 @@ function FindingsPage({ client }: AppDependencies): JSX.Element {
   );
 }
 
-function ExportsPage({ client }: AppDependencies): JSX.Element {
+function ExportsPage({ client }: AppDependencies): React.JSX.Element {
   const navigate = useNavigate();
   const [rows, setRows] = useState<UiSessionListItemV1[]>([]);
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
@@ -1303,7 +1303,7 @@ function ExportsPage({ client }: AppDependencies): JSX.Element {
   );
 }
 
-function SettingsPage({ client }: AppDependencies): JSX.Element {
+function SettingsPage({ client }: AppDependencies): React.JSX.Element {
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
   const [message, setMessage] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(true);
@@ -1453,7 +1453,7 @@ function SettingsPage({ client }: AppDependencies): JSX.Element {
   );
 }
 
-function DiagnosticsPage({ client }: AppDependencies): JSX.Element {
+function DiagnosticsPage({ client }: AppDependencies): React.JSX.Element {
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
   const [snapshot, setSnapshot] = useState<UiDiagnosticsSnapshotV1 | null>(null);
   const [bridgeRows, setBridgeRows] = useState<UiDiagnosticsSnapshotV1['diagnostics']>([]);
@@ -1875,7 +1875,7 @@ function SessionPage({
 }: AppDependencies & {
   readonly sessionId: string;
   readonly subview: SessionSubview;
-}): JSX.Element {
+}): React.JSX.Element {
   const [overview, setOverview] = useState<UiSessionOverviewV1 | null>(null);
   const [timeline, setTimeline] = useState<UiTimelineBundleV1 | null>(null);
   const [network, setNetwork] = useState<UiNetworkRowV1[]>([]);
@@ -2129,7 +2129,7 @@ function SessionPage({
 function BundleInspectPage({
   client,
   inspectId,
-}: AppDependencies & { readonly inspectId: string }): JSX.Element {
+}: AppDependencies & { readonly inspectId: string }): React.JSX.Element {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
   const [overview, setOverview] = useState<UiBundleInspectOverviewV1 | null>(null);
@@ -2260,7 +2260,7 @@ function BundleInspectPage({
   );
 }
 
-function ScreenRouter({ client }: AppDependencies): JSX.Element {
+function ScreenRouter({ client }: AppDependencies): React.JSX.Element {
   const location = useLocation();
   const path = location.pathname;
   const sessionRoute = parseSessionPath(path);
@@ -2290,7 +2290,7 @@ function ScreenRouter({ client }: AppDependencies): JSX.Element {
   return <Navigate to="/sessions" replace />;
 }
 
-export function AppLayout({ client }: AppDependencies): JSX.Element {
+export function AppLayout({ client }: AppDependencies): React.JSX.Element {
   const [selectedEvidence, setSelectedEvidence] = useState<UiEvidenceResolveResultV1 | null>(null);
 
   return (
