@@ -414,7 +414,7 @@ async fn run_ws_runtime(
                             };
 
                             if let Ok(text) = to_json_text(&envelope) {
-                                let _ = ws.send(Message::Text(text)).await;
+                                let _ = ws.send(Message::Text(text.into())).await;
                             }
                             let _ = ws.close(None).await;
                         }
@@ -427,7 +427,7 @@ async fn run_ws_runtime(
                                 while let Some(envelope) = writer_rx_inner.recv().await {
                                     match to_json_text(&envelope) {
                                         Ok(text) => {
-                                            if sink.send(Message::Text(text)).await.is_err() {
+                                            if sink.send(Message::Text(text.into())).await.is_err() {
                                                 break;
                                             }
                                         }

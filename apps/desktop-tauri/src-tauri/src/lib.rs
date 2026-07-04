@@ -2275,7 +2275,7 @@ mod tests {
                         "active_session_id": null
                     }
                 });
-                socket.send(Message::Text(hello.to_string())).await.expect("send hello");
+                socket.send(Message::Text(hello.to_string().into())).await.expect("send hello");
 
                 while let Some(message) = socket.next().await {
                     let message = message.expect("message");
@@ -2311,7 +2311,7 @@ mod tests {
                             }
                         });
                         socket
-                            .send(Message::Text(event.to_string()))
+                            .send(Message::Text(event.to_string().into()))
                             .await
                             .expect("send tabs list");
                         continue;
@@ -2343,7 +2343,7 @@ mod tests {
                             }
                         });
                         socket
-                            .send(Message::Text(session_started.to_string()))
+                            .send(Message::Text(session_started.to_string().into()))
                             .await
                             .expect("send session started");
 
@@ -2372,7 +2372,7 @@ mod tests {
                             }
                         });
                         socket
-                            .send(Message::Text(raw_event.to_string()))
+                            .send(Message::Text(raw_event.to_string().into()))
                             .await
                             .expect("send raw event");
                         continue;
@@ -2396,7 +2396,7 @@ mod tests {
                             }
                         });
                         socket
-                            .send(Message::Text(session_ended.to_string()))
+                            .send(Message::Text(session_ended.to_string().into()))
                             .await
                             .expect("send session ended");
                         break;
@@ -2465,7 +2465,7 @@ mod tests {
                     }
                 });
                 socket_first
-                    .send(Message::Text(hello_first.to_string()))
+                    .send(Message::Text(hello_first.to_string().into()))
                     .await
                     .expect("send first hello");
 
@@ -2487,7 +2487,7 @@ mod tests {
                     }
                 });
                 socket_second
-                    .send(Message::Text(hello_second.to_string()))
+                    .send(Message::Text(hello_second.to_string().into()))
                     .await
                     .expect("send second hello");
 
@@ -2525,7 +2525,7 @@ mod tests {
                             }
                         });
                         socket_second
-                            .send(Message::Text(event.to_string()))
+                            .send(Message::Text(event.to_string().into()))
                             .await
                             .expect("send tabs list");
                         break;
@@ -2586,7 +2586,7 @@ mod tests {
                         "active_session_id": null
                     }
                 });
-                socket.send(Message::Text(hello.to_string())).await.expect("send hello");
+                socket.send(Message::Text(hello.to_string().into())).await.expect("send hello");
 
                 while let Some(message) = socket.next().await {
                     let message = message.expect("message");
@@ -2613,7 +2613,7 @@ mod tests {
                                 "session_id": "sess_err_1"
                             }
                         });
-                        socket.send(Message::Text(event.to_string())).await.expect("send error");
+                        socket.send(Message::Text(event.to_string().into())).await.expect("send error");
                         break;
                     }
                 }
