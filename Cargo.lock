@@ -1450,6 +1450,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "glassbox-contracts"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2 0.10.9",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "glassbox-fixtures"
+version = "0.1.0"
+dependencies = [
+ "glassbox-contracts",
+]
+
+[[package]]
+name = "glassbox-kernel"
+version = "0.1.0"
+dependencies = [
+ "glassbox-contracts",
+ "glassbox-fixtures",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "glib"
 version = "0.18.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

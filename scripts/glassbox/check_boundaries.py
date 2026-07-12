@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""Verify Glassbox package and bundle dispositions without building artifacts."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import subprocess
+import sys
+import tomllib
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+MANIFEST = ROOT / "docs/glassbox/COMPONENT-MANIFEST.json"
+FORBIDDEN_BY_CLASS = {
+    "glassbox_core": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity"},
+    "glassbox_worker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "glassbox-import-coordinator", "glassbox-storage-sqlite"},
+}
+
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def git(*args: str) -> str:
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+    return result.stdout.strip() if result.returncode == 0 else "unknown"
+
+def package_name(path: Path) -> str | None:
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    return data.get("package", {}).get("name")
+
+def dependency_names(data: dict) -> set[str]:
+    names: set[str] = set()
+    for table in ("dependencies", "dev-dependencies", "build-dependencies"):
+        for alias, value in data.get(table, {}).items():
+            names.add(value.get("package", alias) if isinstance(value, dict) else alias)
+    return names
+
+def validate() -> tuple[list[str], list[dict]]:
+    errors: list[str] = []
+    evidence: list[dict] = []
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    components = {item["path"]: item for item in manifest["components"]}
+    discovered: dict[str, tuple[Path, str]] = {}
+    for cargo in ROOT.glob("**/Cargo.toml"):
+        if any(part in {"target", ".git"} for part in cargo.parts): continue
+        name = package_name(cargo)
+        if name: discovered[cargo.parent.relative_to(ROOT).as_posix()] = (cargo, name)
+    for path, (cargo, name) in sorted(discovered.items()):
+        component = components.get(path)
+        if not component:
+            errors.append(f"unclassified Rust package: {path} ({name})")
+            continue
+        data = tomllib.loads(cargo.read_text(encoding="utf-8"))
+        dependencies = dependency_names(data)
+        forbidden = sorted(dependencies & FORBIDDEN_BY_CLASS.get(component["class"], set()))
+        if forbidden: errors.append(f"forbidden dependencies for {path}: {', '.join(forbidden)}")
+        evidence.append({"path":path,"package":name,"class":component["class"],"disposition":component["disposition"],"dependencies":sorted(dependencies),"manifest_sha256":sha256(cargo)})
+    declared_present = {path for path, item in components.items() if item.get("present", True) and path != "."}
+    missing = sorted(path for path in declared_present if path not in discovered and not (ROOT / path / "package.json").is_file())
+    if missing: errors.append("declared present components missing package manifest: " + ", ".join(missing))
+    return errors, evidence
+
+def self_test() -> list[str]:
+    failures = []
+    core = {"dependencies":{"dtt-core":{"path":"../dtt-core"}}}
+    if not (dependency_names(core) & FORBIDDEN_BY_CLASS["glassbox_core"]): failures.append("core DTT edge escaped")
+    worker = {"dependencies":{"glassbox-import-coordinator":{"path":"../glassbox-import-coordinator"}}}
+    if not (dependency_names(worker) & FORBIDDEN_BY_CLASS["glassbox_worker"]): failures.append("worker coordinator edge escaped")
+    root = {"workspace":{"members":["crates/dtt-core","crates/glassbox-kernel"]}}
+    if dependency_names(root): failures.append("workspace membership treated as dependency")
+    return failures
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--receipt", type=Path)
+    args = parser.parse_args()
+    if args.self_test: errors, packages = self_test(), []
+    else: errors, packages = validate()
+    receipt = {"schema_version":"glassbox-boundary-receipt/v1","ok":not errors,"mode":"self-test" if args.self_test else "boundary","generated_at":datetime.now(timezone.utc).isoformat(),"git_head":git("rev-parse","HEAD"),"git_tree":git("rev-parse","HEAD^{tree}"),"git_dirty":bool(git("status","--porcelain")),"errors":errors,"packages":packages}
+    encoded = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
+    if args.receipt: args.receipt.parent.mkdir(parents=True, exist_ok=True); args.receipt.write_text(encoded, encoding="utf-8")
+    sys.stdout.write(encoded)
+    return 0 if receipt["ok"] else 1
+
+if __name__ == "__main__": raise SystemExit(main())

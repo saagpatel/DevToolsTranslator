@@ -1,0 +1,13 @@
+[package]
+name = "glassbox-kernel"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glassbox-contracts = { path = "../glassbox-contracts" }
+thiserror.workspace = true
+
+[dev-dependencies]
+glassbox-fixtures = { path = "../glassbox-fixtures" }
+serde_json = "1"

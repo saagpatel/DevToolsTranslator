@@ -1,6 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
+  "crates/glassbox-contracts",
+  "crates/glassbox-kernel",
+  "crates/glassbox-fixtures",
   "apps/desktop-tauri/src-tauri",
   "crates/dtt-core",
   "crates/dtt-storage",
@@ -14,6 +17,11 @@ members = [
 edition = "2021"
 license = "MIT"
 version = "0.1.0"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+sha2 = "0.10"
+thiserror = "2"
 
 [workspace.metadata.devtools-translator]
 mode = "local_beta"

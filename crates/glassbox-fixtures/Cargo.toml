@@ -1,0 +1,8 @@
+[package]
+name = "glassbox-fixtures"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glassbox-contracts = { path = "../glassbox-contracts" }
