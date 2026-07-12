@@ -15,7 +15,7 @@ An oracle listed as `planned` is an assigned later-gate deliverable, not evidenc
 | 1 | Atomic migration/staging/crash recovery | Rust tests in `glassbox-storage-sqlite`, `glassbox-import-coordinator`, and worker integration tests | Forced process abort before commit proves no partial canonical publication; replay/collision/wrong-key tests | Storage/coordinator implemented; worker integration remains Gate 2 |
 | 2 | Hostile import budgets/confinement | `scripts/glassbox/run_hostile_import_gate.sh` plus per-parser fuzz targets | `glassbox-hostile-import/v1` | Core worker and fixture-NDJSON corpus implemented; ZIP/HAR/OTLP/PCAP parsers remain disabled pending their corpora |
 | 2 | Key lifecycle, plaintext residue, retention, crypto-shred | `scripts/glassbox/run_key_lifecycle_gate.sh` | `glassbox-key-lifecycle/v1` | Harness implemented; blocked until product authority supplies a matching Glassbox macOS provisioning profile |
-| 2 | Seeded-secret/redaction/export derivation | `scripts/glassbox/run_privacy_gate.sh` | `glassbox-privacy-gate/v1` with zero leaks | Planned |
+| 2 | Seeded-secret/redaction/export derivation | `scripts/glassbox/run_privacy_gate.sh` | `glassbox-privacy-gate/v1` with zero leaks | Implemented; clean commit-bound receipt required for promotion |
 | 3 | Five mystery families and epistemic restraint | `scripts/glassbox/run_mystery_acceptance.sh` | `glassbox-mystery-gate/v1` | Planned |
 | 3 | Keyboard, VoiceOver, zoom, reduced motion, tabular equivalence | `scripts/glassbox/run_accessibility_gate.sh` | `glassbox-accessibility/v1` | Planned |
 | 4 | Native Messaging identity, frame, replay, revoke, lifecycle | `scripts/glassbox/run_browser_ipc_gate.sh` | `glassbox-browser-ipc/v1` | Planned |

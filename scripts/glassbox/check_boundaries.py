@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs/glassbox/COMPONENT-MANIFEST.json"
 FORBIDDEN_BY_CLASS = {
     "glassbox_core": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity"},
-    "glassbox_worker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "glassbox-import-coordinator", "glassbox-storage-sqlite"},
+    "glassbox_worker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "glassbox-import-coordinator", "glassbox-storage-sqlite", "glassbox-key-lifecycle", "glassbox-privacy"},
 }
 
 def sha256(path: Path) -> str:
@@ -45,7 +45,7 @@ def validate() -> tuple[list[str], list[dict]]:
     root_workspace = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))["workspace"]["members"]
     runtime_workspace = tomllib.loads((ROOT / "glassbox-runtime/Cargo.toml").read_text(encoding="utf-8"))["workspace"]["members"]
     runtime_paths = {Path("glassbox-runtime", member).resolve().relative_to(ROOT.resolve()).as_posix() for member in runtime_workspace}
-    required_runtime = {"crates/glassbox-storage-sqlite", "crates/glassbox-import-coordinator"}
+    required_runtime = {"crates/glassbox-storage-sqlite", "crates/glassbox-import-coordinator", "crates/glassbox-key-lifecycle"}
     if runtime_paths != required_runtime:
         errors.append(f"runtime workspace members must be exactly {sorted(required_runtime)}, found {sorted(runtime_paths)}")
     if any(path in root_workspace for path in required_runtime):
