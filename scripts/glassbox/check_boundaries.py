@@ -18,6 +18,7 @@ FORBIDDEN_BY_CLASS = {
     "glassbox_core": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity"},
     "glassbox_worker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "glassbox-import-coordinator", "glassbox-storage-sqlite", "glassbox-key-lifecycle", "glassbox-privacy"},
     "glassbox_ui": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
+    "glassbox_shell": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types", "reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
     "glassbox_stdio_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
     "glassbox_broker_contract": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
     "glassbox_loopback_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types", "reqwest", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
@@ -29,6 +30,7 @@ NETWORK_FORBIDDEN_BY_CLASS = {
     "glassbox_worker": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite", "axios", "got", "node-fetch"},
     "glassbox_ui": {"axios", "got", "node-fetch"},
     "glassbox_stdio_broker": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
+    "glassbox_shell": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
 }
 
 def sha256(path: Path) -> str:

@@ -26,10 +26,14 @@
     {"path":"crates/glassbox-import-coordinator","class":"glassbox_core","disposition":"planned_included","present":true},
     {"path":"apps/glassbox-import-worker","class":"glassbox_worker","disposition":"planned_included","present":true},
     {"path":"apps/glassbox-ui","class":"glassbox_ui","disposition":"planned_included","present":true},
+    {"path":"apps/glassbox-desktop/src-tauri","class":"glassbox_shell","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-fixtures","class":"glassbox_test","disposition":"test_only","present":true},
     {"path":"scripts/glassbox/storage-spike","class":"glassbox_test","disposition":"test_only","present":true}
   ],
-  "governed_surfaces": ["Cargo.toml","Cargo.lock","package.json","pnpm-lock.yaml","pnpm-workspace.yaml","glassbox-runtime","apps","crates","packages","scripts",".github"],
+  "governed_surfaces": [".gitignore","Cargo.toml","Cargo.lock","package.json","pnpm-lock.yaml","pnpm-workspace.yaml","glassbox-runtime","apps","crates","packages","scripts",".github"],
+  "opaque_assets": [
+    {"path":"apps/glassbox-desktop/src-tauri/icons/icon.png","sha256":"a8a025fa3ae11b4a8c8458e8ca0f8ccc1e5c4574174ac4ccfbe6f5a65c15515d"}
+  ],
   "scan_exclusions": [
     {"path":"docs/glassbox","reason":"normative policy text is structurally validated and intentionally names prohibited controls"},
     {"path":"scripts/glassbox/check_gate0.py","reason":"oracle contains prohibited matcher literals and self-test fixtures"}

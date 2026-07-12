@@ -205,7 +205,15 @@ def validate(precommit: bool, base_ref: str) -> tuple[list[str], dict]:
         data = path.read_bytes() if precommit else head_bytes(rel)
         try: text = data.decode("utf-8")
         except UnicodeDecodeError:
-            errors.append(f"changed opaque/binary payload requires explicit hashed asset policy: {rel}"); continue
+            opaque_assets = {x["path"]: x["sha256"] for x in manifest.get("opaque_assets", [])}
+            expected_hash = opaque_assets.get(rel)
+            if expected_hash is None:
+                errors.append(f"changed opaque/binary payload requires explicit hashed asset policy: {rel}")
+            elif digest(data) != expected_hash:
+                errors.append(f"changed opaque/binary payload hash mismatch: {rel}")
+            else:
+                scanned.append(rel)
+            continue
         mode = run_git("ls-files", "-s", "--", rel, check=False).split()
         if mode and mode[0] == "120000": errors.append(f"tracked symlink requires explicit security review: {rel}")
         scanned.append(rel)

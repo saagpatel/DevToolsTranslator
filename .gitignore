@@ -3,3 +3,5 @@ node_modules/
 target/
 .DS_Store
 pnpm-debug.log*
+apps/glassbox-desktop/src-tauri/gen/
+artifacts/glassbox-macos-artifact-readiness.json

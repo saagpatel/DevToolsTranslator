@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+MODE="strict"
+if [[ "${1:-}" == "--readiness" ]]; then MODE="readiness"; shift; fi
+if [[ $# -ne 3 ]]; then echo "usage: $0 [--readiness] APP DMG RECEIPT" >&2; exit 2; fi
+python3 "$ROOT/scripts/glassbox/verify_macos_artifact.py" "$MODE" "$ROOT" "$1" "$2" "$3"

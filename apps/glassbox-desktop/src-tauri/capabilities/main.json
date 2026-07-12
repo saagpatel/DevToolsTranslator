@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-window-no-commands",
+  "description": "Glassbox renders local evidence UI and exposes no Tauri commands in this shell slice.",
+  "windows": ["main"],
+  "permissions": []
+}
