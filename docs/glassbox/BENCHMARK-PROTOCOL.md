@@ -1,0 +1,59 @@
+# Glassbox Benchmark Protocol
+
+Status: accepted for Gate 0 review
+Owner: product authority and independent benchmark reviewer
+
+## Purpose
+
+Measure whether Glassbox improves evidence-supported investigation without increasing unsupported causal claims, privacy failures, permission surprises, or observer effect.
+
+## Corpus
+
+Maintain at least 25 held-out variants across five mystery families:
+
+1. Upload coinciding with an app freeze.
+2. One action producing a request cascade.
+3. DNS delay versus connection reuse/cached lookup.
+4. Backend latency during local CPU/disk/memory contention.
+5. Deliberately insufficient evidence whose correct conclusion is `unknown`.
+
+Every family includes counterfactual and negative-control variants plus burst, corruption, truncation, clock-skew, missing-span, encryption, privacy, crash, and high-cardinality cases. Designers and implementers do not see held-out answer keys.
+
+## Scoring rubric
+
+Primary measures:
+
+- Correct evidence-supported conclusion and correct `unknown` rate.
+- Time to first evidence-supported conclusion.
+- Unsupported causal-claim rate.
+- Evidence-link and provenance accuracy.
+
+Safety/operational measures:
+
+- Seeded-secret leakage.
+- Permission surprises or silent escalation.
+- Capture/import overhead, unmarked drops, crash recovery, and accessibility completion.
+
+Goldens score structured claims, relations, evidence, counterevidence, and missing evidence—not prose.
+
+## Study sequence
+
+1. Freeze rubric, exclusions, comparator tasks, training, instrumentation, and analysis plan.
+2. Run a randomized, counterbalanced 10-12 participant pilot against the relevant existing toolchain.
+3. Use pilot variance for a power analysis; do not claim efficacy from the pilot.
+4. Pre-register the formal sample size, primary outcome, statistical test, exclusions, and stopping rule.
+5. Run the held-out formal study with independent scoring and blinded adjudication of disagreements.
+
+Agents may build fixtures and scoring tools but do not substitute for human participants.
+
+## Product targets
+
+- At least 90% of conclusions cite addressable evidence.
+- Under 5% unsupported causal claims.
+- Zero seeded-secret leakage.
+- Every dropped, truncated, opaque, or clock-uncertain region is visible.
+- A meaningful improvement in time to evidence-supported conclusion, supported by the formal study rather than assumed as 30% from an underpowered pilot.
+
+## Stop rule
+
+If held-out results fail epistemic, privacy, or workflow gates, do not consolidate or retire donors. Repair the smallest causal failure class, preserve the preregistered result, create new held-out variants, and rerun only under a documented follow-up protocol.
