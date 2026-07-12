@@ -79,7 +79,9 @@ pub enum KernelError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use glassbox_contracts::{RelationBasis, RelationProvenance, TemporalRelation};
+    use glassbox_contracts::{
+        RelationBasis, RelationProvenance, RelationProvenanceRecord, TemporalRelation,
+    };
     use glassbox_fixtures::gate1_fixture;
 
     #[test]
@@ -126,10 +128,16 @@ mod tests {
             fixture.observations[0].semantic_id.clone(),
             missing,
             RelationBasis::TemporalCandidate,
-            RelationProvenance::DeterministicRule,
-            Some("temporal-window/v1".into()),
-            vec![fixture.observations[0].semantic_id.clone()],
-            vec![],
+            RelationProvenanceRecord {
+                class: RelationProvenance::DeterministicJoin,
+                rule_version: "temporal-window/v1".into(),
+                inputs: vec![fixture.observations[0].semantic_id.clone()],
+                supporting_evidence: vec![fixture.observations[0].semantic_id.clone()],
+                counterevidence: vec![],
+                missing_evidence: vec!["target observation".into()],
+                falsifier: None,
+                clock_uncertainty: None,
+            },
         )
         .unwrap();
         let mut kernel = EvidenceKernel::default();

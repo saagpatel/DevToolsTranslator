@@ -4,6 +4,7 @@ members = [
   "crates/glassbox-contracts",
   "crates/glassbox-kernel",
   "crates/glassbox-import",
+  "crates/glassbox-investigation",
   "crates/glassbox-privacy",
   "apps/glassbox-import-worker",
   "crates/glassbox-fixtures",

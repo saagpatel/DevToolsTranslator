@@ -108,10 +108,23 @@ pub enum RelationBasis {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum RelationProvenance {
-    NativeSource,
-    DeterministicRule,
+    SourceAsserted,
+    DeterministicJoin,
+    HeuristicJoin,
     ModelGenerated,
     UserAsserted,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct RelationProvenanceRecord {
+    pub class: RelationProvenance,
+    pub rule_version: String,
+    pub inputs: Vec<SemanticObservationId>,
+    pub supporting_evidence: Vec<SemanticObservationId>,
+    pub counterevidence: Vec<SemanticObservationId>,
+    pub missing_evidence: Vec<String>,
+    pub falsifier: Option<String>,
+    pub clock_uncertainty: Option<TimeInterval>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -119,10 +132,7 @@ pub struct EvidenceRelation {
     pub from: SemanticObservationId,
     pub to: SemanticObservationId,
     pub basis: RelationBasis,
-    pub provenance: RelationProvenance,
-    pub rule_version: Option<String>,
-    pub inputs: Vec<SemanticObservationId>,
-    pub counterevidence: Vec<SemanticObservationId>,
+    pub provenance: RelationProvenanceRecord,
     pub output_hash: String,
 }
 
@@ -131,58 +141,47 @@ impl EvidenceRelation {
         from: SemanticObservationId,
         to: SemanticObservationId,
         basis: RelationBasis,
-        provenance: RelationProvenance,
-        rule_version: Option<String>,
-        inputs: Vec<SemanticObservationId>,
-        counterevidence: Vec<SemanticObservationId>,
+        provenance: RelationProvenanceRecord,
     ) -> Result<Self, ContractError> {
-        if provenance != RelationProvenance::NativeSource
-            && missing_rule_version(rule_version.as_deref())
-        {
+        if provenance.rule_version.is_empty() {
             return Err(ContractError::MissingRelationRuleVersion);
         }
-        if provenance != RelationProvenance::NativeSource && inputs.is_empty() {
+        if provenance.inputs.is_empty() || provenance.supporting_evidence.is_empty() {
             return Err(ContractError::MissingRelationInputs);
         }
-        let output_hash = relation_hash(
-            &from,
-            &to,
-            &basis,
-            &provenance,
-            rule_version.as_deref(),
-            &inputs,
-            &counterevidence,
-        );
-        Ok(Self { from, to, basis, provenance, rule_version, inputs, counterevidence, output_hash })
+        if requires_falsifier(&provenance.class) && missing_optional_text(&provenance.falsifier) {
+            return Err(ContractError::MissingRelationFalsifier);
+        }
+        let output_hash = relation_hash(&from, &to, &basis, &provenance);
+        Ok(Self { from, to, basis, provenance, output_hash })
     }
 
     pub fn validate(&self) -> Result<(), ContractError> {
-        let expected = relation_hash(
-            &self.from,
-            &self.to,
-            &self.basis,
-            &self.provenance,
-            self.rule_version.as_deref(),
-            &self.inputs,
-            &self.counterevidence,
-        );
+        let expected = relation_hash(&self.from, &self.to, &self.basis, &self.provenance);
         if expected != self.output_hash {
             return Err(ContractError::RelationHashMismatch);
         }
-        if self.provenance != RelationProvenance::NativeSource
-            && missing_rule_version(self.rule_version.as_deref())
-        {
+        if self.provenance.rule_version.is_empty() {
             return Err(ContractError::MissingRelationRuleVersion);
         }
-        if self.provenance != RelationProvenance::NativeSource && self.inputs.is_empty() {
+        if self.provenance.inputs.is_empty() || self.provenance.supporting_evidence.is_empty() {
             return Err(ContractError::MissingRelationInputs);
+        }
+        if requires_falsifier(&self.provenance.class)
+            && missing_optional_text(&self.provenance.falsifier)
+        {
+            return Err(ContractError::MissingRelationFalsifier);
         }
         Ok(())
     }
 }
 
-fn missing_rule_version(version: Option<&str>) -> bool {
-    match version {
+fn requires_falsifier(class: &RelationProvenance) -> bool {
+    matches!(class, RelationProvenance::HeuristicJoin | RelationProvenance::ModelGenerated)
+}
+
+fn missing_optional_text(value: &Option<String>) -> bool {
+    match value {
         None => true,
         Some(value) => value.is_empty(),
     }
@@ -192,10 +191,7 @@ fn relation_hash(
     from: &SemanticObservationId,
     to: &SemanticObservationId,
     basis: &RelationBasis,
-    provenance: &RelationProvenance,
-    rule_version: Option<&str>,
-    inputs: &[SemanticObservationId],
-    counterevidence: &[SemanticObservationId],
+    provenance: &RelationProvenanceRecord,
 ) -> String {
     let mut hasher = Sha256::new();
     for part in [
@@ -203,17 +199,33 @@ fn relation_hash(
         from.as_str(),
         to.as_str(),
         relation_basis_name(basis),
-        relation_provenance_name(provenance),
-        rule_version.unwrap_or(""),
+        relation_provenance_name(&provenance.class),
+        &provenance.rule_version,
+        provenance.falsifier.as_deref().unwrap_or(""),
     ] {
         hasher.update((part.len() as u64).to_be_bytes());
         hasher.update(part.as_bytes());
     }
-    for group in [inputs, counterevidence] {
+    for group in [
+        provenance.inputs.as_slice(),
+        provenance.supporting_evidence.as_slice(),
+        provenance.counterevidence.as_slice(),
+    ] {
         hasher.update((group.len() as u64).to_be_bytes());
         for id in group {
             hasher.update((id.as_str().len() as u64).to_be_bytes());
             hasher.update(id.as_str().as_bytes());
+        }
+    }
+    hasher.update((provenance.missing_evidence.len() as u64).to_be_bytes());
+    for missing in &provenance.missing_evidence {
+        hasher.update((missing.len() as u64).to_be_bytes());
+        hasher.update(missing.as_bytes());
+    }
+    if let Some(interval) = provenance.clock_uncertainty {
+        for bound in [interval.earliest_ns.to_string(), interval.latest_ns.to_string()] {
+            hasher.update((bound.len() as u64).to_be_bytes());
+            hasher.update(bound.as_bytes());
         }
     }
     format!("sha256:{:x}", hasher.finalize())
@@ -229,8 +241,9 @@ fn relation_basis_name(basis: &RelationBasis) -> &'static str {
 
 fn relation_provenance_name(provenance: &RelationProvenance) -> &'static str {
     match provenance {
-        RelationProvenance::NativeSource => "native_source",
-        RelationProvenance::DeterministicRule => "deterministic_rule",
+        RelationProvenance::SourceAsserted => "source_asserted",
+        RelationProvenance::DeterministicJoin => "deterministic_join",
+        RelationProvenance::HeuristicJoin => "heuristic_join",
         RelationProvenance::ModelGenerated => "model_generated",
         RelationProvenance::UserAsserted => "user_asserted",
     }
@@ -244,6 +257,8 @@ pub enum ContractError {
     MissingRelationRuleVersion,
     #[error("derived relation is missing addressable inputs")]
     MissingRelationInputs,
+    #[error("heuristic or model relation is missing a falsifier")]
+    MissingRelationFalsifier,
     #[error("relation output hash does not match its provenance")]
     RelationHashMismatch,
 }
@@ -261,10 +276,16 @@ mod tests {
                 from.clone(),
                 to.clone(),
                 RelationBasis::TemporalCandidate,
-                RelationProvenance::DeterministicRule,
-                None,
-                vec![from.clone()],
-                vec![],
+                RelationProvenanceRecord {
+                    class: RelationProvenance::DeterministicJoin,
+                    rule_version: String::new(),
+                    inputs: vec![from.clone()],
+                    supporting_evidence: vec![from.clone()],
+                    counterevidence: vec![],
+                    missing_evidence: vec![],
+                    falsifier: None,
+                    clock_uncertainty: None,
+                },
             ),
             Err(ContractError::MissingRelationRuleVersion)
         );
@@ -272,10 +293,16 @@ mod tests {
             from.clone(),
             to,
             RelationBasis::TemporalCandidate,
-            RelationProvenance::DeterministicRule,
-            Some("temporal/v1".into()),
-            vec![from],
-            vec![],
+            RelationProvenanceRecord {
+                class: RelationProvenance::DeterministicJoin,
+                rule_version: "temporal/v1".into(),
+                inputs: vec![from.clone()],
+                supporting_evidence: vec![from],
+                counterevidence: vec![],
+                missing_evidence: vec![],
+                falsifier: None,
+                clock_uncertainty: None,
+            },
         )
         .unwrap();
         relation.output_hash.push('0');

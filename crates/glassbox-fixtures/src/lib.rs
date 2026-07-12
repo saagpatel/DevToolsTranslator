@@ -1,6 +1,6 @@
 use glassbox_contracts::{
     EvidenceRelation, LineageId, MaterializationId, NativeObservation, RelationBasis,
-    RelationProvenance, SemanticObservationId, SourceTrust, TimeInterval,
+    RelationProvenance, RelationProvenanceRecord, SemanticObservationId, SourceTrust, TimeInterval,
 };
 use std::collections::BTreeMap;
 
@@ -30,10 +30,16 @@ pub fn gate1_fixture() -> Gate1Fixture {
         first.semantic_id.clone(),
         second.semantic_id.clone(),
         RelationBasis::SourceAsserted,
-        RelationProvenance::NativeSource,
-        None,
-        vec![first.semantic_id.clone(), second.semantic_id.clone()],
-        vec![],
+        RelationProvenanceRecord {
+            class: RelationProvenance::SourceAsserted,
+            rule_version: "fixture-adapter/v1".into(),
+            inputs: vec![first.semantic_id.clone(), second.semantic_id.clone()],
+            supporting_evidence: vec![first.semantic_id.clone(), second.semantic_id.clone()],
+            counterevidence: vec![],
+            missing_evidence: vec![],
+            falsifier: None,
+            clock_uncertainty: Some(TimeInterval::new(180, 220).unwrap()),
+        },
     )
     .unwrap();
     Gate1Fixture { observations: vec![first, second], relations: vec![relation] }
