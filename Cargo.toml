@@ -8,6 +8,7 @@ members = [
   "crates/glassbox-browser-ipc",
   "crates/glassbox-live-source",
   "apps/glassbox-otlp-broker",
+  "crates/glassbox-network-import",
   "crates/glassbox-privacy",
   "apps/glassbox-import-worker",
   "crates/glassbox-fixtures",

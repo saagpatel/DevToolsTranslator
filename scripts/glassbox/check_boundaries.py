@@ -21,6 +21,7 @@ FORBIDDEN_BY_CLASS = {
     "glassbox_stdio_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
     "glassbox_broker_contract": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
     "glassbox_loopback_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types", "reqwest", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
+    "glassbox_parser": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
 }
 NETWORK_FORBIDDEN_BY_CLASS = {
     "glassbox_core": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite", "axios", "got", "node-fetch"},

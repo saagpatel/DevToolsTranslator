@@ -1,6 +1,6 @@
 # ADR-008: Hostile Import Security
 
-Status: bounded worker protocol and fixture-NDJSON parser implemented; archive/source parsers remain gated
+Status: bounded worker protocol, fixture-NDJSON, and hostile-corpus packet-capture parser implemented; remaining archive/source parsers stay gated
 Owner: import owner and privacy/security gatekeeper
 
 ## Decision
@@ -19,4 +19,4 @@ UI-process parsing, `read_to_end` for unbounded members, extraction before valid
 
 Fuzzing and malicious corpora cover ZIP bombs, traversal, malformed HAR/OTLP/PCAP, large strings, duplicate entries, oversized IPC frames, cancellation, forced crash, timeout, and restart. Peak resources remain within the declared budget and no partial investigation becomes visible.
 
-The first executable slice is `apps/glassbox-import-worker` plus `scripts/glassbox/run_hostile_import_gate.sh`. It proves a no-storage/no-key dependency closure, Developer-ID-signed App Sandbox execution without network entitlements, denied socket creation, per-record and per-frame bounds, fail-closed malformed/unknown/oversized input, cancellation without an end frame, RSS enforcement, complete-stream coordinator validation, and process-abort rollback. It does not authorize ZIP, HAR, OTLP, or PCAP parsing; each parser must add its format-specific hostile corpus before enablement.
+The first executable slice is `apps/glassbox-import-worker` plus `scripts/glassbox/run_hostile_import_gate.sh`. It proves a no-storage/no-key dependency closure, Developer-ID-signed App Sandbox execution without network entitlements, denied socket creation, per-record and per-frame bounds, fail-closed malformed/unknown/oversized input, cancellation without an end frame, RSS enforcement, complete-stream coordinator validation, and process-abort rollback. It does not authorize ZIP, HAR, or file-based OTLP parsing; each parser must add its format-specific hostile corpus before enablement. PCAP/PCAPNG is enabled only through the metadata-only streaming path and corpus in `glassbox-network-import`; it never retains raw payload or asserts process attribution.

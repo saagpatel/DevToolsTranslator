@@ -66,6 +66,113 @@ pub const FIELD_RULES: &[FieldRule] = &[
     rule("otel", "resource", DataClass::ContentSensitive, Transform::Drop, Transform::Pseudonym),
     rule("otel", "baggage", DataClass::Credential, Transform::Drop, Transform::Drop),
     rule("dns", "name", DataClass::ContentSensitive, Transform::Drop, Transform::Pseudonym),
+    rule(
+        "packet",
+        "capture_source",
+        DataClass::ContentSensitive,
+        Transform::Drop,
+        Transform::Pseudonym,
+    ),
+    rule(
+        "packet",
+        "section_index",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "interface_id",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "interface_name",
+        DataClass::ContentSensitive,
+        Transform::Drop,
+        Transform::Pseudonym,
+    ),
+    rule(
+        "packet",
+        "packet_ordinal",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "byte_offset",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "captured_len",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "original_len",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "link_type",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "timestamp_resolution_ns",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule("packet", "opacity", DataClass::Public, Transform::Preserve, Transform::Preserve),
+    rule("packet", "network_protocol", DataClass::Public, Transform::Preserve, Transform::Preserve),
+    rule(
+        "packet",
+        "source_address",
+        DataClass::ContentSensitive,
+        Transform::Drop,
+        Transform::Pseudonym,
+    ),
+    rule(
+        "packet",
+        "destination_address",
+        DataClass::ContentSensitive,
+        Transform::Drop,
+        Transform::Pseudonym,
+    ),
+    rule(
+        "packet",
+        "transport_protocol",
+        DataClass::Public,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "source_port",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "packet",
+        "destination_port",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
     rule("packet", "payload", DataClass::ContentSensitive, Transform::Drop, Transform::Pseudonym),
     rule(
         "diagnostic",
@@ -106,6 +213,23 @@ pub const SOURCE_SCHEMA_FIELDS: &[(&str, &str)] = &[
     ("otel", "resource"),
     ("otel", "baggage"),
     ("dns", "name"),
+    ("packet", "capture_source"),
+    ("packet", "section_index"),
+    ("packet", "interface_id"),
+    ("packet", "interface_name"),
+    ("packet", "packet_ordinal"),
+    ("packet", "byte_offset"),
+    ("packet", "captured_len"),
+    ("packet", "original_len"),
+    ("packet", "link_type"),
+    ("packet", "timestamp_resolution_ns"),
+    ("packet", "opacity"),
+    ("packet", "network_protocol"),
+    ("packet", "source_address"),
+    ("packet", "destination_address"),
+    ("packet", "transport_protocol"),
+    ("packet", "source_port"),
+    ("packet", "destination_port"),
     ("packet", "payload"),
     ("diagnostic", "message"),
     ("process", "command_line"),
@@ -355,6 +479,31 @@ mod tests {
     #[test]
     fn inventory_is_unique_and_credentials_fail_closed() {
         validate_inventory().unwrap();
+    }
+
+    #[test]
+    fn packet_addresses_and_interface_identifiers_do_not_survive_metadata_mode() {
+        let fields = [
+            NativeField {
+                source: "packet".into(),
+                field: "source_address".into(),
+                value: "192.0.2.10".into(),
+            },
+            NativeField {
+                source: "packet".into(),
+                field: "interface_name".into(),
+                value: "work-vpn".into(),
+            },
+            NativeField {
+                source: "packet".into(),
+                field: "destination_port".into(),
+                value: "443".into(),
+            },
+        ];
+        let result = redact(&fields, PrivacyMode::Metadata, &[7; 32]).unwrap();
+        assert!(!result.fields.contains_key("packet.source_address"));
+        assert!(!result.fields.contains_key("packet.interface_name"));
+        assert_eq!(result.fields.get("packet.destination_port").map(String::as_str), Some("443"));
     }
 
     #[test]

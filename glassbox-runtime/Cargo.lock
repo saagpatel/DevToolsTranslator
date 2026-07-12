@@ -279,6 +279,7 @@ version = "0.1.0"
 dependencies = [
  "glassbox-contracts",
  "glassbox-import",
+ "glassbox-network-import",
  "serde",
  "serde_json",
  "thiserror",
@@ -304,6 +305,14 @@ dependencies = [
  "tempfile",
  "thiserror",
  "zeroize",
+]
+
+[[package]]
+name = "glassbox-network-import"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
