@@ -5,6 +5,8 @@ members = [
   "crates/glassbox-kernel",
   "crates/glassbox-import",
   "crates/glassbox-investigation",
+  "crates/glassbox-browser-ipc",
+  "crates/glassbox-live-source",
   "crates/glassbox-privacy",
   "apps/glassbox-import-worker",
   "crates/glassbox-fixtures",
@@ -30,6 +32,7 @@ thiserror = "2"
 hmac = "0.12"
 hex = "0.4"
 url = "2"
+zeroize = "1"
 
 [workspace.metadata.devtools-translator]
 mode = "local_beta"

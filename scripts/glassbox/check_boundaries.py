@@ -18,6 +18,14 @@ FORBIDDEN_BY_CLASS = {
     "glassbox_core": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity"},
     "glassbox_worker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "glassbox-import-coordinator", "glassbox-storage-sqlite", "glassbox-key-lifecycle", "glassbox-privacy"},
     "glassbox_ui": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
+    "glassbox_stdio_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
+    "glassbox_broker_contract": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
+}
+NETWORK_FORBIDDEN_BY_CLASS = {
+    "glassbox_core": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite", "axios", "got", "node-fetch"},
+    "glassbox_worker": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite", "axios", "got", "node-fetch"},
+    "glassbox_ui": {"axios", "got", "node-fetch"},
+    "glassbox_stdio_broker": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
 }
 
 def sha256(path: Path) -> str:
@@ -69,7 +77,7 @@ def validate() -> tuple[list[str], list[dict]]:
             continue
         data = tomllib.loads(cargo.read_text(encoding="utf-8"))
         dependencies = dependency_names(data)
-        forbidden = sorted(dependencies & FORBIDDEN_BY_CLASS.get(component["class"], set()))
+        forbidden = sorted(dependencies & (FORBIDDEN_BY_CLASS.get(component["class"], set()) | NETWORK_FORBIDDEN_BY_CLASS.get(component["class"], set())))
         if forbidden: errors.append(f"forbidden dependencies for {path}: {', '.join(forbidden)}")
         if path in required_runtime and any(name.startswith("dtt-") for name in dependencies):
             errors.append(f"DTT dependency entered isolated runtime component {path}")
@@ -87,7 +95,7 @@ def validate() -> tuple[list[str], list[dict]]:
             errors.append(f"unclassified JavaScript package: {path} ({name})")
             continue
         dependencies = js_dependency_names(data)
-        forbidden = sorted(dependencies & FORBIDDEN_BY_CLASS.get(component["class"], set()))
+        forbidden = sorted(dependencies & (FORBIDDEN_BY_CLASS.get(component["class"], set()) | NETWORK_FORBIDDEN_BY_CLASS.get(component["class"], set())))
         if forbidden:
             errors.append(f"forbidden dependencies for {path}: {', '.join(forbidden)}")
         evidence.append({"path":path,"package":name,"ecosystem":"javascript","class":component["class"],"disposition":component["disposition"],"dependencies":sorted(dependencies),"manifest_sha256":sha256(package_json)})
@@ -110,6 +118,8 @@ def self_test() -> list[str]:
     if not (dependency_names(worker) & FORBIDDEN_BY_CLASS["glassbox_worker"]): failures.append("worker coordinator edge escaped")
     ui = {"dependencies":{"@dtt/shared-types":"workspace:*"}}
     if not (js_dependency_names(ui) & FORBIDDEN_BY_CLASS["glassbox_ui"]): failures.append("UI DTT edge escaped")
+    networked_core = {"dependencies":{"reqwest":"0.12"}}
+    if not (dependency_names(networked_core) & NETWORK_FORBIDDEN_BY_CLASS["glassbox_core"]): failures.append("core network edge escaped")
     root = {"workspace":{"members":["crates/dtt-core","crates/glassbox-kernel"]}}
     if dependency_names(root): failures.append("workspace membership treated as dependency")
     return failures

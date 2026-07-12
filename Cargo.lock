@@ -1451,6 +1451,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "glassbox-browser-ipc"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "hmac",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 2.0.18",
+ "zeroize",
+]
+
+[[package]]
 name = "glassbox-contracts"
 version = "0.1.0"
 dependencies = [
@@ -1504,6 +1517,18 @@ dependencies = [
  "glassbox-fixtures",
  "serde_json",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "glassbox-live-source"
+version = "0.1.0"
+dependencies = [
+ "hmac",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 2.0.18",
+ "zeroize",
 ]
 
 [[package]]
@@ -5403,6 +5428,12 @@ dependencies = [
  "syn 2.0.117",
  "synstructure",
 ]
+
+[[package]]
+name = "zeroize"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e"
 
 [[package]]
 name = "zerotrie"
