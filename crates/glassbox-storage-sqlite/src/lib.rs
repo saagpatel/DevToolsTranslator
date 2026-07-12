@@ -132,23 +132,21 @@ impl SqlCipherRepository {
         for observation in observations {
             let semantic_id = observation.semantic_id.as_str();
             let payload = serde_json::to_vec(observation)?;
-            let existing: Option<Vec<u8>> = tx
-                .query_row(
-                    "SELECT payload_json FROM observations WHERE semantic_id=?1",
-                    [semantic_id],
-                    |row| row.get(0),
-                )
-                .optional()?;
-            match existing {
-                Some(existing) if existing == payload => {}
-                Some(_) => return Err(StorageError::SemanticCollision(semantic_id.to_owned())),
-                None => {
-                    tx.execute(
-                        "INSERT INTO observations(semantic_id,payload_json) VALUES (?1,?2)",
-                        params![semantic_id, payload],
-                    )?;
-                    inserted += 1;
-                }
+            let changed = tx.execute(
+                "INSERT OR IGNORE INTO observations(semantic_id,payload_json) VALUES (?1,?2)",
+                params![semantic_id, payload],
+            )?;
+            if changed == 1 {
+                inserted += 1;
+                continue;
+            }
+            let existing: Vec<u8> = tx.query_row(
+                "SELECT payload_json FROM observations WHERE semantic_id=?1",
+                [semantic_id],
+                |row| row.get(0),
+            )?;
+            if existing != payload {
+                return Err(StorageError::SemanticCollision(semantic_id.to_owned()));
             }
         }
         for relation in relations {
@@ -198,6 +196,52 @@ impl SqlCipherRepository {
             self.connection.query_row("SELECT count(*) FROM observations", [], |row| row.get(0))?;
         usize::try_from(count).map_err(|_| StorageError::InvalidCount(count))
     }
+
+    /// Returns a stable, bounded keyset page. The cursor need not identify an existing row.
+    pub fn observation_page_after(
+        &self,
+        after: Option<&str>,
+        limit: usize,
+    ) -> Result<ObservationPage, StorageError> {
+        if limit == 0 || limit > MAX_OBSERVATION_PAGE_SIZE {
+            return Err(StorageError::InvalidPageSize(limit));
+        }
+        let cursor = after.unwrap_or("");
+        let mut statement = self.connection.prepare(
+            "SELECT semantic_id,payload_json FROM observations
+             WHERE semantic_id > ?1 ORDER BY semantic_id LIMIT ?2",
+        )?;
+        let mut rows = statement.query(params![cursor, (limit + 1) as i64])?;
+        let mut observations = Vec::with_capacity(limit);
+        let mut has_more = false;
+        while let Some(row) = rows.next()? {
+            if observations.len() == limit {
+                has_more = true;
+                break;
+            }
+            let semantic_id: String = row.get(0)?;
+            let payload: Vec<u8> = row.get(1)?;
+            let observation: NativeObservation = serde_json::from_slice(&payload)?;
+            if observation.semantic_id.as_str() != semantic_id {
+                return Err(StorageError::StoredIdentityMismatch);
+            }
+            observations.push(observation);
+        }
+        let next_cursor = if has_more {
+            observations.last().map(|item| item.semantic_id.as_str().to_owned())
+        } else {
+            None
+        };
+        Ok(ObservationPage { observations, next_cursor })
+    }
+}
+
+pub const MAX_OBSERVATION_PAGE_SIZE: usize = 500;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ObservationPage {
+    pub observations: Vec<NativeObservation>,
+    pub next_cursor: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -218,6 +262,10 @@ pub enum StorageError {
     SemanticCollision(String),
     #[error("invalid observation count {0}")]
     InvalidCount(i64),
+    #[error("page size {0} is outside 1..=500")]
+    InvalidPageSize(usize),
+    #[error("stored semantic identity does not match its index key")]
+    StoredIdentityMismatch,
     #[error(transparent)]
     Sql(#[from] rusqlite::Error),
     #[error(transparent)]
@@ -246,6 +294,17 @@ mod tests {
             .unwrap();
         assert_eq!(replay, PublishResult { inserted: 0, replayed: true });
         assert_eq!(repository.observation_count().unwrap(), 2);
+        let page = repository.observation_page_after(None, 1).unwrap();
+        assert_eq!(page.observations.len(), 1);
+        assert!(page.next_cursor.is_some());
+        let second_page =
+            repository.observation_page_after(page.next_cursor.as_deref(), 1).unwrap();
+        assert_eq!(second_page.observations.len(), 1);
+        assert_ne!(page.observations[0].semantic_id, second_page.observations[0].semantic_id);
+        assert!(matches!(
+            repository.observation_page_after(None, 0),
+            Err(StorageError::InvalidPageSize(0))
+        ));
         assert_eq!(
             repository.observation(&fixture.observations[0].semantic_id).unwrap(),
             Some(fixture.observations[0].clone())

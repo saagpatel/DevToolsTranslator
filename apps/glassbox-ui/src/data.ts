@@ -11,6 +11,16 @@ export interface EvidenceRow {
   uncertainty: string;
 }
 
+export interface EvidencePage {
+  rows: EvidenceRow[];
+  totalCount: number;
+  nextCursor: string | null;
+  visibleGapCount: number;
+  unmarkedDropCount: number;
+}
+
+export const MAX_EVIDENCE_PAGE_SIZE = 200;
+
 export const evidence: EvidenceRow[] = [
   { id: 'e1', time: '14:07:05.812', actor: 'User action', source: 'Chrome tab', locator: 'chrome://selected-tab/input/584923', event: 'Click “Upload”', status: 'observed', uncertainty: '±40 ms' },
   { id: 'e2', time: '14:07:09.231', actor: 'User action', source: 'Chrome tab', locator: 'chrome://selected-tab/file/ab21', event: 'File selected', status: 'observed', uncertainty: '±40 ms' },
@@ -27,3 +37,20 @@ export const evidence: EvidenceRow[] = [
 ];
 
 export const lanes = ['User action', 'Application', 'System resources', 'Network', 'DNS / Trace'] as const;
+
+export const fixtureEvidencePage: EvidencePage = {
+  rows: evidence,
+  totalCount: evidence.length,
+  nextCursor: null,
+  visibleGapCount: evidence.filter((row) => row.status === 'gap').length,
+  unmarkedDropCount: 0,
+};
+
+export function validateEvidencePage(page: EvidencePage): void {
+  if (page.rows.length === 0 || page.rows.length > MAX_EVIDENCE_PAGE_SIZE) throw new Error('evidence page is outside its bounded size');
+  if (page.totalCount < page.rows.length) throw new Error('evidence total is smaller than the visible page');
+  if (page.totalCount > page.rows.length && !page.nextCursor) throw new Error('truncated evidence page has no cursor');
+  if (new Set(page.rows.map((row) => row.id)).size !== page.rows.length) throw new Error('evidence page contains duplicate identities');
+  if (page.visibleGapCount !== page.rows.filter((row) => row.status === 'gap').length) throw new Error('visible gap count does not match rows');
+  if (page.unmarkedDropCount !== 0) throw new Error('unmarked drops are not renderable');
+}

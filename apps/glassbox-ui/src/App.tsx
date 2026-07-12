@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { evidence, lanes, type EvidenceRow } from './data';
+import { fixtureEvidencePage, lanes, validateEvidencePage, type EvidencePage, type EvidenceRow } from './data';
 import { Chevron, Search, Warning } from './icons';
 
 type WorkspaceMode = 'timeline' | 'table';
@@ -75,7 +75,7 @@ function ScopeRail(): React.JSX.Element {
   );
 }
 
-function Timeline({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }): React.JSX.Element {
+function Timeline({ rows, selected, onSelect }: { rows: EvidenceRow[]; selected: string; onSelect: (id: string) => void }): React.JSX.Element {
   const positions: Record<string, [number, number]> = {
     e1: [7, 12], e2: [20, 13], e7: [48, 31], e11: [82, 12], e3: [17, 17], e6: [42, 15], e12: [84, 13],
     e8: [39, 48], e5: [17, 17], e9: [48, 42], e4: [17, 18], e10: [48, 42],
@@ -87,7 +87,7 @@ function Timeline({ selected, onSelect }: { selected: string; onSelect: (id: str
         <section className="lane" key={lane} aria-label={`${lane} lane`}>
           <header><strong>{lane}</strong><span>{lane === 'System resources' ? 'CPU / Memory / Disk' : lane === 'Network' ? 'TCP / TLS / HTTP' : 'Evidence source'}</span></header>
           <div className="lane-track">
-            {evidence.filter((item) => item.actor === lane && positions[item.id]).map((item) => {
+            {rows.filter((item) => item.actor === lane && positions[item.id]).map((item) => {
               const [left, width] = positions[item.id];
               return <button key={item.id} type="button" className={`event event--${item.status}${selected === item.id ? ' is-selected' : ''}`} style={{ left: `${left}%`, width: `${width}%` }} onClick={() => onSelect(item.id)}><b>{item.event}</b><span className="mono">{item.time}</span></button>;
             })}
@@ -98,13 +98,13 @@ function Timeline({ selected, onSelect }: { selected: string; onSelect: (id: str
   );
 }
 
-function EvidenceTable({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }): React.JSX.Element {
+function EvidenceTable({ rows, selected, onSelect }: { rows: EvidenceRow[]; selected: string; onSelect: (id: string) => void }): React.JSX.Element {
   return (
     <div className="table-wrap" tabIndex={0} aria-label="Scrollable evidence table">
       <table className="evidence-table">
         <caption className="sr-only">Complete tabular equivalent of the actor-lane timeline</caption>
         <thead><tr><th>#</th><th>Time (UTC)</th><th>Actor</th><th>Source</th><th>Native locator</th><th>Event</th><th>Claim</th><th>Uncertainty</th></tr></thead>
-        <tbody>{evidence.map((row, index) => <tr key={row.id} className={selected === row.id ? 'is-selected' : ''} onClick={() => onSelect(row.id)}><td>{index + 1}</td><td className="mono">{row.time}</td><td>{row.actor}</td><td>{row.source}</td><td className="mono locator">{row.locator}</td><td>{row.event}</td><td><StatusText status={row.status} /></td><td className="mono">{row.uncertainty}</td></tr>)}</tbody>
+        <tbody>{rows.map((row, index) => <tr key={row.id} className={selected === row.id ? 'is-selected' : ''} onClick={() => onSelect(row.id)}><td>{index + 1}</td><td className="mono">{row.time}</td><td>{row.actor}</td><td>{row.source}</td><td className="mono locator">{row.locator}</td><td>{row.event}</td><td><StatusText status={row.status} /></td><td className="mono">{row.uncertainty}</td></tr>)}</tbody>
       </table>
     </div>
   );
@@ -141,12 +141,14 @@ function ExportDrawer({ onClose }: { onClose: () => void }): React.JSX.Element {
   return <div className="modal-backdrop" role="presentation" onMouseDown={onClose}><section className="export-dialog" role="dialog" aria-modal="true" aria-labelledby="export-title" onMouseDown={(event) => event.stopPropagation()}><header><h2 id="export-title">Export / redaction preview</h2><button type="button" onClick={onClose} aria-label="Close export review">Close</button></header><p>Derived export · authenticity: <strong>unsigned_local</strong></p><table><thead><tr><th>Field</th><th>Class</th><th>Action</th></tr></thead><tbody><tr><td>HTTP Authorization</td><td>credential</td><td>Drop</td></tr><tr><td>Request URL</td><td>content-sensitive</td><td>Structural redaction</td></tr><tr><td>Host identity</td><td>content-sensitive</td><td>Scoped pseudonym</td></tr><tr><td>Status code</td><td>metadata-sensitive</td><td>Preserve</td></tr></tbody></table><footer><button type="button" className="primary">Create derived package</button></footer></section></div>;
 }
 
-export function GlassboxApp(): React.JSX.Element {
+export function GlassboxApp({ page = fixtureEvidencePage }: { page?: EvidencePage }): React.JSX.Element {
+  validateEvidencePage(page);
+  const rows = page.rows;
   const [mode, setMode] = useState<WorkspaceMode>('timeline');
   const [selectedId, setSelectedId] = useState('e7');
   const [exportOpen, setExportOpen] = useState(false);
-  const selected = useMemo(() => evidence.find((row) => row.id === selectedId) ?? evidence[0]!, [selectedId]);
-  return <><a className="skip-link" href="#workspace">Skip to investigation</a><main className="app-shell"><Toolbar onExport={() => setExportOpen(true)} /><div className="workbench"><ScopeRail /><section className="workspace" id="workspace"><div className="workspace-tabs" role="tablist" aria-label="Evidence view"><button role="tab" aria-selected={mode === 'timeline'} onClick={() => setMode('timeline')}>Timeline (actors)</button><button role="tab" aria-selected={mode === 'table'} onClick={() => setMode('table')}>Table (evidence)</button><span>{evidence.length} fixture events · paused</span></div>{mode === 'timeline' ? <Timeline selected={selectedId} onSelect={setSelectedId} /> : null}<EvidenceTable selected={selectedId} onSelect={setSelectedId} /></section><Inspector selected={selected} /></div><footer className="status-bar"><span>Anchor: Upload freeze</span><span className="warning-text">Clock certainty limited · no causal conclusion</span></footer></main>{exportOpen ? <ExportDrawer onClose={() => setExportOpen(false)} /> : null}</>;
+  const selected = useMemo(() => rows.find((row) => row.id === selectedId) ?? rows[0]!, [rows, selectedId]);
+  return <><a className="skip-link" href="#workspace">Skip to investigation</a><main className="app-shell"><Toolbar onExport={() => setExportOpen(true)} /><div className="workbench"><ScopeRail /><section className="workspace" id="workspace"><div className="workspace-tabs" role="tablist" aria-label="Evidence view"><button role="tab" aria-selected={mode === 'timeline'} onClick={() => setMode('timeline')}>Timeline (actors)</button><button role="tab" aria-selected={mode === 'table'} onClick={() => setMode('table')}>Table (evidence)</button><span>{rows.length} of {page.totalCount.toLocaleString()} events · paused</span></div>{mode === 'timeline' ? <Timeline rows={rows} selected={selectedId} onSelect={setSelectedId} /> : null}<EvidenceTable rows={rows} selected={selectedId} onSelect={setSelectedId} /></section><Inspector selected={selected} /></div><footer className="status-bar"><span>Anchor: Upload freeze</span><span className="warning-text">Clock certainty limited · no causal conclusion</span></footer></main>{exportOpen ? <ExportDrawer onClose={() => setExportOpen(false)} /> : null}</>;
 }
 
 export default GlassboxApp;
