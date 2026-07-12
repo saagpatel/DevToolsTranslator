@@ -19,6 +19,8 @@ Maintain at least 25 held-out variants across five mystery families:
 
 Every family includes counterfactual and negative-control variants plus burst, corruption, truncation, clock-skew, missing-span, encryption, privacy, crash, and high-cardinality cases. Designers and implementers do not see held-out answer keys.
 
+The checked-in `mystery-families.json` file is a public 60-scenario rehearsal corpus for rendering, epistemic invariants, failure variants, and scoring-tool mechanics. It is explicitly labeled `public_rehearsal_not_held_out`; its expected statuses are visible and it is never eligible as formal efficacy evidence. The independent benchmark reviewer creates and retains the real held-out corpus and answer keys outside implementer access, publishing a frozen manifest hash before collection and only the allowed study artifacts afterward.
+
 ## Scoring rubric
 
 Primary measures:
@@ -45,6 +47,8 @@ Goldens score structured claims, relations, evidence, counterevidence, and missi
 5. Run the held-out formal study with independent scoring and blinded adjudication of disagreements.
 
 Agents may build fixtures and scoring tools but do not substitute for human participants.
+
+`scripts/glassbox/validate_benchmark_results.py` validates the required external artifact shape and product thresholds. Structural validation does not authenticate participant identity, preregistration, or study records; an independent reviewer must verify those primary sources. `scripts/glassbox/run_benchmark_readiness_gate.sh` must report `benchmark_passed: false` and `gate6_promotable: false` until a genuine external artifact passes that review and validation.
 
 ## Product targets
 

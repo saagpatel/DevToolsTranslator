@@ -19,14 +19,23 @@ from pathlib import Path
 
 root, fixture_path, output_path, receipt_path = map(Path, sys.argv[1:])
 views = json.loads(output_path.read_text())["views"]
+fixture = json.loads(fixture_path.read_text())
 families = defaultdict(set)
 for view in views:
     families[view["family"]].add(view["variant"])
 statuses = Counter(view["conclusion"] for view in views)
 limitation_kinds = {item["kind"] for view in views for item in view["limitations"]}
+required_case_kinds = {"base","counterfactual","negative_control","burst","corruption","truncation","clock_skew","missing_span","encryption","privacy","crash","high_cardinality"}
+fixture_case_kinds = {
+    family["family"]: {variant["case_kind"] for variant in family["variants"]}
+    for family in fixture["families"]
+}
 checks = {
+    "public_corpus_explicitly_not_held_out": fixture.get("schema_version") == "glassbox-rehearsal-corpus/v2" and fixture.get("corpus_role") == "public_rehearsal_not_held_out",
     "five_mystery_families": len(families) == 5,
-    "counterfactual_and_negative_controls": all(variants == {"base", "counterfactual", "negative_control"} for variants in families.values()),
+    "sixty_rehearsal_scenarios": len(views) == 60,
+    "all_required_case_kinds_per_family": all(kinds == required_case_kinds for kinds in fixture_case_kinds.values()),
+    "counterfactual_and_negative_controls": all({"base", "counterfactual", "negative_control"}.issubset(variants) for variants in families.values()),
     "timeline_table_equivalence": all({item["id"] for lane in view["actor_lanes"].values() for item in lane} == {row["id"] for row in view["evidence_table"]} for view in views),
     "native_drilldown_addressable": all(all(row["native_locator"] for row in view["evidence_table"]) for view in views),
     "why_link_explanations_complete": all(all(rel["basis"] and rel["rule_version"] and rel["uncertainty"] and rel["supporting_evidence"] for rel in view["relation_explanations"]) for view in views),

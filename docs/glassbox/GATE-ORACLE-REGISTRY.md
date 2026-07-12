@@ -27,7 +27,7 @@ An oracle listed as `planned` is an assigned later-gate deliverable, not evidenc
 | 6 | Million-event performance | `scripts/glassbox/run_performance_gate.sh` | `glassbox-performance/v1` | Encrypted million-event batched ingest, bounded keyset page queries, JSON projection, addressability, explicit-gap/drop accounting, bounded React page contract, and measured p95/RSS oracle implemented; signed native-app end-to-end interaction p95 remains |
 | 6 | Signing, entitlements, Gatekeeper, notarization, staple | `scripts/glassbox/verify_macos_artifact.sh` | `glassbox-macos-artifact/v1`, bound to `.app` and DMG hashes | Planned |
 | 6 | Install/update/downgrade/revoke/uninstall/residue | `scripts/glassbox/run_lifecycle_gate.sh` | `glassbox-lifecycle/v1` | Planned |
-| 6 | Pilot, power analysis, preregistered human benchmark | `scripts/glassbox/validate_benchmark_results.py` | `glassbox-benchmark/v1` plus external study artifacts | Planned; external dependency |
+| 6 | Pilot, power analysis, preregistered human benchmark | `scripts/glassbox/validate_benchmark_results.py` plus `scripts/glassbox/run_benchmark_readiness_gate.sh` | `glassbox-benchmark/v1` plus externally verified study artifacts; readiness receipt is not a pass receipt | Public 60-scenario rehearsal corpus and fail-closed validator/readiness oracle implemented; formal benchmark remains external and readiness must report `benchmark_passed: false`, `gate6_promotable: false` until genuine human-study artifacts pass independent verification |
 | 7 | Donor parity/soak/rollback/approval | `scripts/glassbox/check_retirement_readiness.py` | `glassbox-retirement/v1` | Planned; explicit approval required |
 
 ## Failure policy

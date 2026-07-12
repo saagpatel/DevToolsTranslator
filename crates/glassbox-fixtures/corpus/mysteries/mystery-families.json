@@ -1,7 +1,51 @@
-[
-  {"family":"upload_freeze","symptom":"application freeze overlaps upload","primary":"upload pressure contributed to the freeze","alternative":"independent main-thread stall","missing":"app signpost around the freeze","next":"app-owned signpost","variants":[{"name":"base","status":"inferred","limitation":"clock"},{"name":"counterfactual","status":"unknown","limitation":"gap"},{"name":"negative_control","status":"unknown","limitation":"sampling"}]},
-  {"family":"request_cascade","symptom":"one click precedes a request cascade","primary":"browser initiator structure links the click and requests","alternative":"background refresh produced the requests","missing":"selected-tab browser initiator records","next":"foreground selected-tab attachment","variants":[{"name":"base","status":"correlated","limitation":"redaction"},{"name":"counterfactual","status":"unknown","limitation":"gap"},{"name":"negative_control","status":"unknown","limitation":"opaque"}]},
-  {"family":"dns_reuse_ambiguity","symptom":"connection latency has no visible DNS transaction","primary":"connection reuse avoided a new lookup","alternative":"a cached or missing DNS lookup is outside coverage","missing":"DNS transaction or connection reuse identifier","next":"user-selected HAR with connection metadata","variants":[{"name":"base","status":"inferred","limitation":"opaque"},{"name":"counterfactual","status":"correlated","limitation":"clock"},{"name":"negative_control","status":"unknown","limitation":"gap"}]},
-  {"family":"backend_local_contention","symptom":"backend latency overlaps local CPU and disk pressure","primary":"local contention is a candidate contributor","alternative":"backend service time dominates independently","missing":"trace span breakdown and resource calibration","next":"loopback OTLP for the instrumented app","variants":[{"name":"base","status":"inferred","limitation":"sampling"},{"name":"counterfactual","status":"correlated","limitation":"clock"},{"name":"negative_control","status":"unknown","limitation":"drop"}]},
-  {"family":"insufficient_evidence","symptom":"a user-visible slowdown has only a manual marker","primary":"available evidence cannot distinguish local, network, or backend causes","alternative":"multiple unsupported explanations remain","missing":"request, span, process, or resource evidence","next":"bounded process sampler","variants":[{"name":"base","status":"unknown","limitation":"opaque"},{"name":"counterfactual","status":"unknown","limitation":"redaction"},{"name":"negative_control","status":"unknown","limitation":"gap"}]}
-]
+{
+  "schema_version": "glassbox-rehearsal-corpus/v2",
+  "corpus_role": "public_rehearsal_not_held_out",
+  "families": [
+    {
+      "family": "upload_freeze", "symptom": "application freeze overlaps upload", "primary": "upload pressure contributed to the freeze", "alternative": "independent main-thread stall", "missing": "app signpost around the freeze", "next": "app-owned signpost",
+      "variants": [
+        {"name":"base","case_kind":"base","status":"inferred","limitation":"clock"}, {"name":"counterfactual","case_kind":"counterfactual","status":"unknown","limitation":"gap"}, {"name":"negative_control","case_kind":"negative_control","status":"unknown","limitation":"sampling"},
+        {"name":"burst","case_kind":"burst","status":"correlated","limitation":"sampling"}, {"name":"corruption","case_kind":"corruption","status":"unknown","limitation":"gap"}, {"name":"truncation","case_kind":"truncation","status":"unknown","limitation":"drop"},
+        {"name":"clock_skew","case_kind":"clock_skew","status":"unknown","limitation":"clock"}, {"name":"missing_span","case_kind":"missing_span","status":"unknown","limitation":"gap"}, {"name":"encryption","case_kind":"encryption","status":"unknown","limitation":"opaque"},
+        {"name":"privacy","case_kind":"privacy","status":"unknown","limitation":"redaction"}, {"name":"crash","case_kind":"crash","status":"unknown","limitation":"gap"}, {"name":"high_cardinality","case_kind":"high_cardinality","status":"correlated","limitation":"sampling"}
+      ]
+    },
+    {
+      "family": "request_cascade", "symptom": "one click precedes a request cascade", "primary": "browser initiator structure links the click and requests", "alternative": "background refresh produced the requests", "missing": "selected-tab browser initiator records", "next": "foreground selected-tab attachment",
+      "variants": [
+        {"name":"base","case_kind":"base","status":"correlated","limitation":"redaction"}, {"name":"counterfactual","case_kind":"counterfactual","status":"unknown","limitation":"gap"}, {"name":"negative_control","case_kind":"negative_control","status":"unknown","limitation":"opaque"},
+        {"name":"burst","case_kind":"burst","status":"correlated","limitation":"sampling"}, {"name":"corruption","case_kind":"corruption","status":"unknown","limitation":"gap"}, {"name":"truncation","case_kind":"truncation","status":"unknown","limitation":"drop"},
+        {"name":"clock_skew","case_kind":"clock_skew","status":"unknown","limitation":"clock"}, {"name":"missing_span","case_kind":"missing_span","status":"unknown","limitation":"gap"}, {"name":"encryption","case_kind":"encryption","status":"unknown","limitation":"opaque"},
+        {"name":"privacy","case_kind":"privacy","status":"unknown","limitation":"redaction"}, {"name":"crash","case_kind":"crash","status":"unknown","limitation":"gap"}, {"name":"high_cardinality","case_kind":"high_cardinality","status":"correlated","limitation":"sampling"}
+      ]
+    },
+    {
+      "family": "dns_reuse_ambiguity", "symptom": "connection latency has no visible DNS transaction", "primary": "connection reuse avoided a new lookup", "alternative": "a cached or missing DNS lookup is outside coverage", "missing": "DNS transaction or connection reuse identifier", "next": "user-selected HAR with connection metadata",
+      "variants": [
+        {"name":"base","case_kind":"base","status":"inferred","limitation":"opaque"}, {"name":"counterfactual","case_kind":"counterfactual","status":"correlated","limitation":"clock"}, {"name":"negative_control","case_kind":"negative_control","status":"unknown","limitation":"gap"},
+        {"name":"burst","case_kind":"burst","status":"correlated","limitation":"sampling"}, {"name":"corruption","case_kind":"corruption","status":"unknown","limitation":"gap"}, {"name":"truncation","case_kind":"truncation","status":"unknown","limitation":"drop"},
+        {"name":"clock_skew","case_kind":"clock_skew","status":"unknown","limitation":"clock"}, {"name":"missing_span","case_kind":"missing_span","status":"unknown","limitation":"gap"}, {"name":"encryption","case_kind":"encryption","status":"unknown","limitation":"opaque"},
+        {"name":"privacy","case_kind":"privacy","status":"unknown","limitation":"redaction"}, {"name":"crash","case_kind":"crash","status":"unknown","limitation":"gap"}, {"name":"high_cardinality","case_kind":"high_cardinality","status":"correlated","limitation":"sampling"}
+      ]
+    },
+    {
+      "family": "backend_local_contention", "symptom": "backend latency overlaps local CPU and disk pressure", "primary": "local contention is a candidate contributor", "alternative": "backend service time dominates independently", "missing": "trace span breakdown and resource calibration", "next": "loopback OTLP for the instrumented app",
+      "variants": [
+        {"name":"base","case_kind":"base","status":"inferred","limitation":"sampling"}, {"name":"counterfactual","case_kind":"counterfactual","status":"correlated","limitation":"clock"}, {"name":"negative_control","case_kind":"negative_control","status":"unknown","limitation":"drop"},
+        {"name":"burst","case_kind":"burst","status":"correlated","limitation":"sampling"}, {"name":"corruption","case_kind":"corruption","status":"unknown","limitation":"gap"}, {"name":"truncation","case_kind":"truncation","status":"unknown","limitation":"drop"},
+        {"name":"clock_skew","case_kind":"clock_skew","status":"unknown","limitation":"clock"}, {"name":"missing_span","case_kind":"missing_span","status":"unknown","limitation":"gap"}, {"name":"encryption","case_kind":"encryption","status":"unknown","limitation":"opaque"},
+        {"name":"privacy","case_kind":"privacy","status":"unknown","limitation":"redaction"}, {"name":"crash","case_kind":"crash","status":"unknown","limitation":"gap"}, {"name":"high_cardinality","case_kind":"high_cardinality","status":"correlated","limitation":"sampling"}
+      ]
+    },
+    {
+      "family": "insufficient_evidence", "symptom": "a user-visible slowdown has only a manual marker", "primary": "available evidence cannot distinguish local, network, or backend causes", "alternative": "multiple unsupported explanations remain", "missing": "request, span, process, or resource evidence", "next": "bounded process sampler",
+      "variants": [
+        {"name":"base","case_kind":"base","status":"unknown","limitation":"opaque"}, {"name":"counterfactual","case_kind":"counterfactual","status":"unknown","limitation":"redaction"}, {"name":"negative_control","case_kind":"negative_control","status":"unknown","limitation":"gap"},
+        {"name":"burst","case_kind":"burst","status":"unknown","limitation":"sampling"}, {"name":"corruption","case_kind":"corruption","status":"unknown","limitation":"gap"}, {"name":"truncation","case_kind":"truncation","status":"unknown","limitation":"drop"},
+        {"name":"clock_skew","case_kind":"clock_skew","status":"unknown","limitation":"clock"}, {"name":"missing_span","case_kind":"missing_span","status":"unknown","limitation":"gap"}, {"name":"encryption","case_kind":"encryption","status":"unknown","limitation":"opaque"},
+        {"name":"privacy","case_kind":"privacy","status":"unknown","limitation":"redaction"}, {"name":"crash","case_kind":"crash","status":"unknown","limitation":"gap"}, {"name":"high_cardinality","case_kind":"high_cardinality","status":"unknown","limitation":"sampling"}
+      ]
+    }
+  ]
+}

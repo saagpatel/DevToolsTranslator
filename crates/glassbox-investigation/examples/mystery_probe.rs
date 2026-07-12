@@ -7,6 +7,13 @@ use serde_json::json;
 use std::{env, fs};
 
 #[derive(Deserialize)]
+struct RehearsalCorpus {
+    schema_version: String,
+    corpus_role: String,
+    families: Vec<Family>,
+}
+
+#[derive(Deserialize)]
 struct Family {
     family: String,
     symptom: String,
@@ -26,9 +33,14 @@ struct Variant {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let path = env::args().nth(1).ok_or("fixture path required")?;
-    let families: Vec<Family> = serde_json::from_slice(&fs::read(path)?)?;
+    let corpus: RehearsalCorpus = serde_json::from_slice(&fs::read(path)?)?;
+    if corpus.schema_version != "glassbox-rehearsal-corpus/v2"
+        || corpus.corpus_role != "public_rehearsal_not_held_out"
+    {
+        return Err("fixture must be explicitly labeled as the public rehearsal corpus".into());
+    }
     let mut views = Vec::new();
-    for family in families {
+    for family in corpus.families {
         for variant in &family.variants {
             let view = build_view(scenario(&family, variant))?;
             if !validate_visual_table_equivalence(&view) {
