@@ -1,0 +1,18 @@
+[package]
+name = "glassbox-import-coordinator"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+workspace = "../../glassbox-runtime"
+
+[dependencies]
+glassbox-import.workspace = true
+glassbox-kernel.workspace = true
+glassbox-storage-sqlite = { path = "../glassbox-storage-sqlite" }
+thiserror.workspace = true
+
+[dev-dependencies]
+glassbox-fixtures = { path = "../glassbox-fixtures" }
+glassbox-storage-sqlite = { path = "../glassbox-storage-sqlite", features = ["test-hooks"] }
+serde_json.workspace = true
+tempfile = "3"

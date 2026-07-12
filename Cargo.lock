@@ -1466,6 +1466,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "glassbox-import"
+version = "0.1.0"
+dependencies = [
+ "glassbox-contracts",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "glassbox-kernel"
 version = "0.1.0"
 dependencies = [

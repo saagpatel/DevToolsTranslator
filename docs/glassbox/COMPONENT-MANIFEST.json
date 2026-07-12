@@ -3,6 +3,7 @@
   "baseline_ref": "origin/main",
   "components": [
     {"path":".","class":"legacy_inherited","disposition":"scaffold_only"},
+    {"path":"glassbox-runtime","class":"glassbox_core","disposition":"planned_included"},
     {"path":"apps/desktop-tauri/src-tauri","class":"legacy_inherited","disposition":"scaffold_only"},
     {"path":"crates/dtt-core","class":"legacy_inherited","disposition":"excluded"}, {"path":"crates/dtt-correlation","class":"legacy_inherited","disposition":"excluded"},
     {"path":"crates/dtt-detectors","class":"legacy_inherited","disposition":"excluded"}, {"path":"crates/dtt-export","class":"legacy_inherited","disposition":"excluded"},
@@ -12,14 +13,14 @@
     {"path":"packages/shared-types","class":"legacy_inherited","disposition":"excluded"},
     {"path":"crates/glassbox-contracts","class":"glassbox_core","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-kernel","class":"glassbox_core","disposition":"planned_included","present":true},
-    {"path":"crates/glassbox-storage-sqlite","class":"glassbox_core","disposition":"planned_included","present":false},
-    {"path":"crates/glassbox-import","class":"glassbox_core","disposition":"planned_included","present":false},
-    {"path":"crates/glassbox-import-coordinator","class":"glassbox_core","disposition":"planned_included","present":false},
+    {"path":"crates/glassbox-storage-sqlite","class":"glassbox_core","disposition":"planned_included","present":true},
+    {"path":"crates/glassbox-import","class":"glassbox_core","disposition":"planned_included","present":true},
+    {"path":"crates/glassbox-import-coordinator","class":"glassbox_core","disposition":"planned_included","present":true},
     {"path":"apps/glassbox-import-worker","class":"glassbox_worker","disposition":"planned_included","present":false},
     {"path":"crates/glassbox-fixtures","class":"glassbox_test","disposition":"test_only","present":true},
     {"path":"scripts/glassbox/storage-spike","class":"glassbox_test","disposition":"test_only","present":true}
   ],
-  "governed_surfaces": ["Cargo.toml","Cargo.lock","package.json","pnpm-lock.yaml","pnpm-workspace.yaml","apps","crates","packages","scripts",".github"],
+  "governed_surfaces": ["Cargo.toml","Cargo.lock","package.json","pnpm-lock.yaml","pnpm-workspace.yaml","glassbox-runtime","apps","crates","packages","scripts",".github"],
   "scan_exclusions": [
     {"path":"docs/glassbox","reason":"normative policy text is structurally validated and intentionally names prohibited controls"},
     {"path":"scripts/glassbox/check_gate0.py","reason":"oracle contains prohibited matcher literals and self-test fixtures"}

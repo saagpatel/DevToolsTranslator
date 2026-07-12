@@ -3,6 +3,7 @@ resolver = "2"
 members = [
   "crates/glassbox-contracts",
   "crates/glassbox-kernel",
+  "crates/glassbox-import",
   "crates/glassbox-fixtures",
   "apps/desktop-tauri/src-tauri",
   "crates/dtt-core",
@@ -20,6 +21,7 @@ version = "0.1.0"
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 sha2 = "0.10"
 thiserror = "2"
 

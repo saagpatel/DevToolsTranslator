@@ -8,11 +8,11 @@ An oracle listed as `planned` is an assigned later-gate deliverable, not evidenc
 | Gate | Oracle | Planned executable path | Required receipt/result | Current state |
 |---|---|---|---|---|
 | 0 | Contract completeness and prohibited-source matcher | `scripts/glassbox/check_gate0.py` | `glassbox-gate0-receipt/v2`; provisional precommit plus authoritative clean-commit/tree binding | Implemented; self-test, independent review, and commit-bound pass receipt required before promotion |
-| 1 | Package/dependency direction | `scripts/glassbox/check_boundaries.py` | `glassbox-boundary-receipt/v1` | Planned |
+| 1 | Package/dependency direction | `scripts/glassbox/check_boundaries.py` | `glassbox-boundary-receipt/v1` | Implemented; enforces separate SQLCipher runtime workspace and no DTT edges |
 | 1 | Bundle and dependency closure against component dispositions | `scripts/glassbox/check_boundaries.py` | Receipt lists every linked/bundled component and rejects `excluded` or unclassified legacy code | Planned; blocks shell integration |
-| 1 | Identity collision, semantic/materialization round trip, clock partial order | Rust tests in `glassbox-contracts` and `glassbox-kernel` | Cargo/JUnit test evidence | Planned |
+| 1 | Identity collision, semantic/materialization round trip, clock partial order | Rust tests in `glassbox-contracts` and `glassbox-kernel` | Cargo test evidence | Implemented; package and full inherited-workspace tests pass |
 | 1 | Encryption/App Sandbox feasibility | `scripts/glassbox/verify_storage_sandbox_spike.sh` | `glassbox-storage-spike/v1` with candidate/license/WAL/crash/perf/signed-sandbox result | Implemented; passed locally on target arm64 Mac, exact clean-commit receipt required |
-| 1 | Atomic migration/staging/crash recovery | Rust tests in `glassbox-storage-sqlite`, `glassbox-import-coordinator`, and worker integration tests | Forced-crash-before-commit and forced-crash-during-publication fixture hashes proving no partial canonical publication and idempotent retry | Planned |
+| 1 | Atomic migration/staging/crash recovery | Rust tests in `glassbox-storage-sqlite`, `glassbox-import-coordinator`, and worker integration tests | Forced process abort before commit proves no partial canonical publication; replay/collision/wrong-key tests | Storage/coordinator implemented; worker integration remains Gate 2 |
 | 2 | Hostile import budgets/confinement | `scripts/glassbox/run_hostile_import_gate.sh` plus per-parser fuzz targets | `glassbox-hostile-import/v1` | Planned |
 | 2 | Key lifecycle, plaintext residue, retention, crypto-shred | `scripts/glassbox/run_key_lifecycle_gate.sh` | `glassbox-key-lifecycle/v1` | Planned |
 | 2 | Seeded-secret/redaction/export derivation | `scripts/glassbox/run_privacy_gate.sh` | `glassbox-privacy-gate/v1` with zero leaks | Planned |

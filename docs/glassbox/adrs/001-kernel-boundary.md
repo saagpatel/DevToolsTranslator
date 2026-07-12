@@ -17,6 +17,8 @@ Use the DTT repository and Tauri/React shell as the implementation scaffold, but
 
 Later adapters and bundle packages may depend on these APIs. Contracts and kernel never depend on `dtt-core`, `dtt-storage`, DTT detectors/correlation, Tauri, React, or donor repositories.
 
+The encrypted storage and trusted coordinator build in the separate `glassbox-runtime/Cargo.toml` workspace. This is a hard dependency-isolation boundary: Cargo unions dependency features when multiple packages are built together, so putting SQLCipher's `rusqlite` feature in the inherited DTT workspace would silently replace the SQLite build used by DTT. The runtime workspace may consume Glassbox contracts/kernel/import as path dependencies but contains no DTT package. The hostile worker remains outside this workspace and can never link storage or coordinator code.
+
 ## Dependency direction
 
 `contracts <- kernel <- storage implementation`; `contracts <- import`. The constrained worker depends only on contracts/import and emits bounded framed staging records or a capability-limited staging artifact. `glassbox-import-coordinator` depends on contracts, kernel, and storage; it validates worker records and invokes storage publication, and the worker can never depend on it. Repository port traits live in the kernel. Fixtures are dev/test-only.

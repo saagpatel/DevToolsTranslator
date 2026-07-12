@@ -42,6 +42,14 @@ def validate() -> tuple[list[str], list[dict]]:
     evidence: list[dict] = []
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     components = {item["path"]: item for item in manifest["components"]}
+    root_workspace = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))["workspace"]["members"]
+    runtime_workspace = tomllib.loads((ROOT / "glassbox-runtime/Cargo.toml").read_text(encoding="utf-8"))["workspace"]["members"]
+    runtime_paths = {Path("glassbox-runtime", member).resolve().relative_to(ROOT.resolve()).as_posix() for member in runtime_workspace}
+    required_runtime = {"crates/glassbox-storage-sqlite", "crates/glassbox-import-coordinator"}
+    if runtime_paths != required_runtime:
+        errors.append(f"runtime workspace members must be exactly {sorted(required_runtime)}, found {sorted(runtime_paths)}")
+    if any(path in root_workspace for path in required_runtime):
+        errors.append("encrypted storage/coordinator must not be members of the inherited DTT workspace")
     discovered: dict[str, tuple[Path, str]] = {}
     for cargo in ROOT.glob("**/Cargo.toml"):
         if any(part in {"target", ".git"} for part in cargo.parts): continue
@@ -56,9 +64,16 @@ def validate() -> tuple[list[str], list[dict]]:
         dependencies = dependency_names(data)
         forbidden = sorted(dependencies & FORBIDDEN_BY_CLASS.get(component["class"], set()))
         if forbidden: errors.append(f"forbidden dependencies for {path}: {', '.join(forbidden)}")
+        if path in required_runtime and any(name.startswith("dtt-") for name in dependencies):
+            errors.append(f"DTT dependency entered isolated runtime component {path}")
         evidence.append({"path":path,"package":name,"class":component["class"],"disposition":component["disposition"],"dependencies":sorted(dependencies),"manifest_sha256":sha256(cargo)})
     declared_present = {path for path, item in components.items() if item.get("present", True) and path != "."}
-    missing = sorted(path for path in declared_present if path not in discovered and not (ROOT / path / "package.json").is_file())
+    missing = sorted(
+        path for path in declared_present
+        if path not in discovered
+        and not (ROOT / path / "package.json").is_file()
+        and not (ROOT / path / "Cargo.toml").is_file()
+    )
     if missing: errors.append("declared present components missing package manifest: " + ", ".join(missing))
     return errors, evidence
 

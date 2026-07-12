@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+  "../crates/glassbox-storage-sqlite",
+  "../crates/glassbox-import-coordinator"
+]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+version = "0.1.0"
+
+[workspace.dependencies]
+glassbox-contracts = { path = "../crates/glassbox-contracts" }
+glassbox-kernel = { path = "../crates/glassbox-kernel" }
+glassbox-import = { path = "../crates/glassbox-import" }
+hex = "0.4"
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
+serde_json = "1"
+thiserror = "2"
+zeroize = "1"
