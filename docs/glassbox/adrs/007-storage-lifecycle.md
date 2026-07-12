@@ -1,6 +1,6 @@
 # ADR-007: Storage, Key Lifecycle, Retention, And Deletion
 
-Status: accepted for Gate 0 review
+Status: accepted; SQLCipher Community Edition selected by Gate 1 target-Mac spike
 Owner: storage owner and privacy/security gatekeeper
 
 ## Decision
@@ -11,7 +11,9 @@ The global catalog is a separate app-key-encrypted store containing only opaque 
 
 Encryption covers native evidence, normalized database and WAL/journal, blobs, indexes, staging/temp files, derived caches, and diagnostics that contain evidence. Plain application-layer encryption of selected rows is rejected because it would leave SQLite metadata/index/WAL leakage unspecified.
 
-Before any persistent Glassbox schema is implemented, Gate 1 must select and prove a full-database mechanism such as SQLCipher or an encrypted VFS/container. The spike records license/distribution implications, WAL/temp behavior, crash recovery, key-loss behavior, target-Mac performance, and App Sandbox compatibility. If no candidate covers the entire per-investigation boundary, persistent storage work stops and the storage backend decision is reopened; the identity/time kernel may remain in memory.
+Gate 1 selected SQLCipher Community Edition through `rusqlite`'s `bundled-sqlcipher-vendored-openssl` feature. Every production build must retain compile-time `SQLITE_TEMP_STORE=2`, runtime `PRAGMA temp_store=MEMORY`, WAL encryption, `secure_delete`, and the no-plaintext residue gate. The selected distribution must reproduce the SQLCipher BSD-style notice and copyright, SQLite notice, and OpenSSL Apache-2.0 notice in a user-accessible licenses surface. A change of SQLCipher edition, crypto provider, `rusqlite` feature, temp-store policy, or SQLite/SQLCipher major version reopens the spike.
+
+The target-Mac spike records license/distribution implications, encrypted database/WAL behavior, compile-time memory-only temporary storage, crash recovery, missing/wrong-key behavior, performance, file modes, and Developer-ID-signed App Sandbox enforcement. If a future candidate or build fails any result, persistent storage work stops and the storage backend decision is reopened; the identity/time kernel may remain in memory.
 
 The wrapping key is non-synchronizing, app-specific, versioned, and stored with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`. Investigation keys are rewrapped atomically during wrapping-key rotation and zeroized from process memory on a best-effort basis after use. No key appears in logs, dumps, diagnostics, or exports.
 
@@ -27,6 +29,8 @@ Original user-selected files are read-only and never deleted. On app-owned delet
 ## Oracle
 
 Tests cover restart, sleep/wake expiry, key loss, wrong key, WAL/temp recovery, crash during write, retention extension, crypto-shred, uninstall preserve/delete choices, and residue inventory.
+
+The selection oracle is `scripts/glassbox/verify_storage_sandbox_spike.sh`. Its authoritative receipt is `glassbox-storage-spike/v1`; `ok` requires both the technical probe and a Developer-ID-signed App Sandbox run, including a denied write outside the container.
 
 ## Rollback
 

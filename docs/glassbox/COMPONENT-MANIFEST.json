@@ -16,7 +16,8 @@
     {"path":"crates/glassbox-import","class":"glassbox_core","disposition":"planned_included","present":false},
     {"path":"crates/glassbox-import-coordinator","class":"glassbox_core","disposition":"planned_included","present":false},
     {"path":"apps/glassbox-import-worker","class":"glassbox_worker","disposition":"planned_included","present":false},
-    {"path":"crates/glassbox-fixtures","class":"glassbox_test","disposition":"test_only","present":true}
+    {"path":"crates/glassbox-fixtures","class":"glassbox_test","disposition":"test_only","present":true},
+    {"path":"scripts/glassbox/storage-spike","class":"glassbox_test","disposition":"test_only","present":true}
   ],
   "governed_surfaces": ["Cargo.toml","Cargo.lock","package.json","pnpm-lock.yaml","pnpm-workspace.yaml","apps","crates","packages","scripts",".github"],
   "scan_exclusions": [
