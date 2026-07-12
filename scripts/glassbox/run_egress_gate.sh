@@ -2,13 +2,15 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOSTILE_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-hostile-egress.XXXXXX")"
-trap 'rm -f "$HOSTILE_RECEIPT"' EXIT
+BROKER_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-broker-egress.XXXXXX")"
+trap 'rm -f "$HOSTILE_RECEIPT" "$BROKER_RECEIPT"' EXIT
 
 python3 "$ROOT/scripts/glassbox/check_boundaries.py" --self-test >/dev/null
 python3 "$ROOT/scripts/glassbox/check_boundaries.py" >/dev/null
 "$ROOT/scripts/glassbox/run_hostile_import_gate.sh" "$HOSTILE_RECEIPT" >/dev/null
+"$ROOT/scripts/glassbox/run_otlp_broker_gate.sh" >"$BROKER_RECEIPT"
 
-python3 - "$ROOT" "$HOSTILE_RECEIPT" <<'PY'
+python3 - "$ROOT" "$HOSTILE_RECEIPT" "$BROKER_RECEIPT" <<'PY'
 import json
 import pathlib
 import re
@@ -17,6 +19,7 @@ import sys
 
 root = pathlib.Path(sys.argv[1])
 hostile = json.loads(pathlib.Path(sys.argv[2]).read_text())
+broker = json.loads(pathlib.Path(sys.argv[3]).read_text())
 protected = [
     root / "crates/glassbox-contracts",
     root / "crates/glassbox-kernel",
@@ -48,6 +51,8 @@ checks = {
     "core_worker_ui_socket_source_absent": not hits,
     "sandboxed_worker_socket_negative_test": hostile.get("checks", {}).get("worker_no_network_self_test") is True,
     "sandboxed_worker_network_entitlements_absent": hostile.get("checks", {}).get("network_entitlements_absent") is True,
+    "loopback_broker_separately_accounted": broker.get("checks", {}).get("ipv4_loopback_runtime") is True and broker.get("checks", {}).get("ipv6_loopback_runtime") is True,
+    "loopback_broker_outbound_denied": broker.get("checks", {}).get("outbound_denied_by_sandbox") is True,
 }
 def git(*args):
     result = subprocess.run(["git", *args], cwd=root, text=True, capture_output=True)
@@ -60,10 +65,11 @@ receipt = {
     "git_dirty": bool(git("status", "--porcelain")),
     "checks": checks,
     "unexpected_source_hits": hits,
+    "broker_binary_sha256": broker.get("binary_sha256"),
     "runtime_checks_remaining": [
         "signed core app entitlement inspection",
         "OS network-syscall monitoring across fixture/import/browse/compare/export workflows",
-        "separate accounting for loopback and passive-context brokers",
+        "separate accounting for future passive-context broker",
     ],
 }
 print(json.dumps(receipt, indent=2, sort_keys=True))

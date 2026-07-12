@@ -1532,6 +1532,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "glassbox-otlp-broker"
+version = "0.1.0"
+dependencies = [
+ "glassbox-live-source",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "zeroize",
+]
+
+[[package]]
 name = "glassbox-privacy"
 version = "0.1.0"
 dependencies = [

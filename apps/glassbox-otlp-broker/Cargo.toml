@@ -1,0 +1,13 @@
+[package]
+name = "glassbox-otlp-broker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glassbox-live-source = { path = "../../crates/glassbox-live-source" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+

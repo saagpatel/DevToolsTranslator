@@ -19,6 +19,7 @@
     {"path":"crates/glassbox-investigation","class":"glassbox_core","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-browser-ipc","class":"glassbox_stdio_broker","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-live-source","class":"glassbox_broker_contract","disposition":"planned_included","present":true},
+    {"path":"apps/glassbox-otlp-broker","class":"glassbox_loopback_broker","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-privacy","class":"glassbox_core","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-import-coordinator","class":"glassbox_core","disposition":"planned_included","present":true},
     {"path":"apps/glassbox-import-worker","class":"glassbox_worker","disposition":"planned_included","present":true},

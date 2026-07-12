@@ -57,6 +57,7 @@ pub enum GapReason {
     QuotaExceeded,
     Revoked,
     EpochChanged,
+    WatchdogTimeout,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
