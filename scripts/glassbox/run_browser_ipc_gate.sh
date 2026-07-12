@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 MANIFEST="$ROOT/docs/glassbox/browser/candidate-production-native-host.json"
 
-cargo test --manifest-path "$ROOT/Cargo.toml" -p glassbox-browser-ipc
-cargo clippy --manifest-path "$ROOT/Cargo.toml" -p glassbox-browser-ipc --all-targets -- -D warnings
+cargo test --manifest-path "$ROOT/Cargo.toml" -p glassbox-browser-ipc >&2
+cargo clippy --manifest-path "$ROOT/Cargo.toml" -p glassbox-browser-ipc --all-targets -- -D warnings >&2
 
 python3 - "$ROOT" "$MANIFEST" <<'PY'
 import hashlib
