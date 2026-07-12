@@ -2,7 +2,8 @@
 resolver = "2"
 members = [
   "../crates/glassbox-storage-sqlite",
-  "../crates/glassbox-import-coordinator"
+  "../crates/glassbox-import-coordinator",
+  "../crates/glassbox-key-lifecycle"
 ]
 
 [workspace.package]
@@ -19,3 +20,6 @@ rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"]
 serde_json = "1"
 thiserror = "2"
 zeroize = "1"
+aes-gcm = "0.10"
+rand = "0.9"
+security-framework = { version = "3.7", features = ["OSX_10_15"] }
