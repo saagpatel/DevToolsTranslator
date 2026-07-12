@@ -17,6 +17,7 @@ MANIFEST = ROOT / "docs/glassbox/COMPONENT-MANIFEST.json"
 FORBIDDEN_BY_CLASS = {
     "glassbox_core": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity"},
     "glassbox_worker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "glassbox-import-coordinator", "glassbox-storage-sqlite", "glassbox-key-lifecycle", "glassbox-privacy"},
+    "glassbox_ui": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
 }
 
 def sha256(path: Path) -> str:
@@ -35,6 +36,12 @@ def dependency_names(data: dict) -> set[str]:
     for table in ("dependencies", "dev-dependencies", "build-dependencies"):
         for alias, value in data.get(table, {}).items():
             names.add(value.get("package", alias) if isinstance(value, dict) else alias)
+    return names
+
+def js_dependency_names(data: dict) -> set[str]:
+    names: set[str] = set()
+    for table in ("dependencies", "devDependencies", "peerDependencies", "optionalDependencies"):
+        names.update(data.get(table, {}).keys())
     return names
 
 def validate() -> tuple[list[str], list[dict]]:
@@ -66,11 +73,29 @@ def validate() -> tuple[list[str], list[dict]]:
         if forbidden: errors.append(f"forbidden dependencies for {path}: {', '.join(forbidden)}")
         if path in required_runtime and any(name.startswith("dtt-") for name in dependencies):
             errors.append(f"DTT dependency entered isolated runtime component {path}")
-        evidence.append({"path":path,"package":name,"class":component["class"],"disposition":component["disposition"],"dependencies":sorted(dependencies),"manifest_sha256":sha256(cargo)})
+        evidence.append({"path":path,"package":name,"ecosystem":"rust","class":component["class"],"disposition":component["disposition"],"dependencies":sorted(dependencies),"manifest_sha256":sha256(cargo)})
+    discovered_js: set[str] = set()
+    for package_json in ROOT.glob("**/package.json"):
+        if any(part in {"node_modules", "dist", ".vite-dist", "target", ".git"} for part in package_json.parts):
+            continue
+        path = package_json.parent.relative_to(ROOT).as_posix()
+        discovered_js.add(path)
+        component = components.get(path)
+        data = json.loads(package_json.read_text(encoding="utf-8"))
+        name = data.get("name", "unnamed-package")
+        if not component:
+            errors.append(f"unclassified JavaScript package: {path} ({name})")
+            continue
+        dependencies = js_dependency_names(data)
+        forbidden = sorted(dependencies & FORBIDDEN_BY_CLASS.get(component["class"], set()))
+        if forbidden:
+            errors.append(f"forbidden dependencies for {path}: {', '.join(forbidden)}")
+        evidence.append({"path":path,"package":name,"ecosystem":"javascript","class":component["class"],"disposition":component["disposition"],"dependencies":sorted(dependencies),"manifest_sha256":sha256(package_json)})
     declared_present = {path for path, item in components.items() if item.get("present", True) and path != "."}
     missing = sorted(
         path for path in declared_present
         if path not in discovered
+        and path not in discovered_js
         and not (ROOT / path / "package.json").is_file()
         and not (ROOT / path / "Cargo.toml").is_file()
     )
@@ -83,6 +108,8 @@ def self_test() -> list[str]:
     if not (dependency_names(core) & FORBIDDEN_BY_CLASS["glassbox_core"]): failures.append("core DTT edge escaped")
     worker = {"dependencies":{"glassbox-import-coordinator":{"path":"../glassbox-import-coordinator"}}}
     if not (dependency_names(worker) & FORBIDDEN_BY_CLASS["glassbox_worker"]): failures.append("worker coordinator edge escaped")
+    ui = {"dependencies":{"@dtt/shared-types":"workspace:*"}}
+    if not (js_dependency_names(ui) & FORBIDDEN_BY_CLASS["glassbox_ui"]): failures.append("UI DTT edge escaped")
     root = {"workspace":{"members":["crates/dtt-core","crates/glassbox-kernel"]}}
     if dependency_names(root): failures.append("workspace membership treated as dependency")
     return failures

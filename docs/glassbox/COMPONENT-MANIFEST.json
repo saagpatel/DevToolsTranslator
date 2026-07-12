@@ -20,6 +20,7 @@
     {"path":"crates/glassbox-privacy","class":"glassbox_core","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-import-coordinator","class":"glassbox_core","disposition":"planned_included","present":true},
     {"path":"apps/glassbox-import-worker","class":"glassbox_worker","disposition":"planned_included","present":true},
+    {"path":"apps/glassbox-ui","class":"glassbox_ui","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-fixtures","class":"glassbox_test","disposition":"test_only","present":true},
     {"path":"scripts/glassbox/storage-spike","class":"glassbox_test","disposition":"test_only","present":true}
   ],
