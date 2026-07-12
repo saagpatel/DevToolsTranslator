@@ -1,6 +1,6 @@
 use glassbox_contracts::{
     EvidenceRelation, LineageId, MaterializationId, NativeObservation, RelationBasis,
-    SemanticObservationId, SourceTrust, TimeInterval,
+    RelationProvenance, SemanticObservationId, SourceTrust, TimeInterval,
 };
 use std::collections::BTreeMap;
 
@@ -26,10 +26,15 @@ pub fn gate1_fixture() -> Gate1Fixture {
     };
     let first = make("capture-a", "mat-a", 100, 220);
     let second = make("capture-b", "mat-b", 180, 300);
-    let relation = EvidenceRelation {
-        from: first.semantic_id.clone(),
-        to: second.semantic_id.clone(),
-        basis: RelationBasis::SourceAsserted,
-    };
+    let relation = EvidenceRelation::derive(
+        first.semantic_id.clone(),
+        second.semantic_id.clone(),
+        RelationBasis::SourceAsserted,
+        RelationProvenance::NativeSource,
+        None,
+        vec![first.semantic_id.clone(), second.semantic_id.clone()],
+        vec![],
+    )
+    .unwrap();
     Gate1Fixture { observations: vec![first, second], relations: vec![relation] }
 }

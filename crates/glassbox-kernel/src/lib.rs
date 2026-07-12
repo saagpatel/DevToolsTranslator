@@ -29,6 +29,7 @@ impl EvidenceKernel {
             }
         }
         for relation in &relations {
+            relation.validate().map_err(KernelError::InvalidRelation)?;
             if !staged.contains_key(&relation.from) {
                 return Err(KernelError::DanglingRelation(relation.from.clone()));
             }
@@ -71,12 +72,14 @@ pub enum KernelError {
     SemanticCollision(SemanticObservationId),
     #[error("relation references absent evidence {0:?}")]
     DanglingRelation(SemanticObservationId),
+    #[error("invalid relation provenance: {0}")]
+    InvalidRelation(#[from] glassbox_contracts::ContractError),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use glassbox_contracts::{RelationBasis, TemporalRelation};
+    use glassbox_contracts::{RelationBasis, RelationProvenance, TemporalRelation};
     use glassbox_fixtures::gate1_fixture;
 
     #[test]
@@ -119,11 +122,16 @@ mod tests {
     fn failed_import_publishes_nothing() {
         let fixture = gate1_fixture();
         let missing = SemanticObservationId::derive("cdp", "missing", "404");
-        let bad = EvidenceRelation {
-            from: fixture.observations[0].semantic_id.clone(),
-            to: missing,
-            basis: RelationBasis::TemporalCandidate,
-        };
+        let bad = EvidenceRelation::derive(
+            fixture.observations[0].semantic_id.clone(),
+            missing,
+            RelationBasis::TemporalCandidate,
+            RelationProvenance::DeterministicRule,
+            Some("temporal-window/v1".into()),
+            vec![fixture.observations[0].semantic_id.clone()],
+            vec![],
+        )
+        .unwrap();
         let mut kernel = EvidenceKernel::default();
         assert!(kernel.import_atomic(fixture.observations, vec![bad]).is_err());
         assert!(kernel.is_empty());
