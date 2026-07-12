@@ -1553,6 +1553,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "glassbox-passive-context-broker"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "zeroize",
+]
+
+[[package]]
 name = "glassbox-privacy"
 version = "0.1.0"
 dependencies = [

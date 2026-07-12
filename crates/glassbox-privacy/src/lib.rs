@@ -175,6 +175,50 @@ pub const FIELD_RULES: &[FieldRule] = &[
     ),
     rule("packet", "payload", DataClass::ContentSensitive, Transform::Drop, Transform::Pseudonym),
     rule(
+        "passive_neighbor",
+        "address",
+        DataClass::ContentSensitive,
+        Transform::Drop,
+        Transform::Pseudonym,
+    ),
+    rule(
+        "passive_neighbor",
+        "link_layer_id",
+        DataClass::ContentSensitive,
+        Transform::Drop,
+        Transform::Pseudonym,
+    ),
+    rule(
+        "passive_neighbor",
+        "interface",
+        DataClass::ContentSensitive,
+        Transform::Drop,
+        Transform::Pseudonym,
+    ),
+    rule(
+        "passive_neighbor",
+        "state",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule("passive_neighbor", "trust", DataClass::Public, Transform::Preserve, Transform::Preserve),
+    rule("passive_neighbor", "role", DataClass::Public, Transform::Preserve, Transform::Preserve),
+    rule(
+        "passive_neighbor",
+        "limitations",
+        DataClass::Public,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "passive_neighbor",
+        "conflict",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
         "diagnostic",
         "message",
         DataClass::ContentSensitive,
@@ -231,6 +275,14 @@ pub const SOURCE_SCHEMA_FIELDS: &[(&str, &str)] = &[
     ("packet", "source_port"),
     ("packet", "destination_port"),
     ("packet", "payload"),
+    ("passive_neighbor", "address"),
+    ("passive_neighbor", "link_layer_id"),
+    ("passive_neighbor", "interface"),
+    ("passive_neighbor", "state"),
+    ("passive_neighbor", "trust"),
+    ("passive_neighbor", "role"),
+    ("passive_neighbor", "limitations"),
+    ("passive_neighbor", "conflict"),
     ("diagnostic", "message"),
     ("process", "command_line"),
     ("generic", "timestamp_ns"),
@@ -504,6 +556,34 @@ mod tests {
         assert!(!result.fields.contains_key("packet.source_address"));
         assert!(!result.fields.contains_key("packet.interface_name"));
         assert_eq!(result.fields.get("packet.destination_port").map(String::as_str), Some("443"));
+    }
+
+    #[test]
+    fn passive_neighbor_identifiers_do_not_survive_metadata_mode() {
+        let fields = [
+            NativeField {
+                source: "passive_neighbor".into(),
+                field: "address".into(),
+                value: "192.0.2.10".into(),
+            },
+            NativeField {
+                source: "passive_neighbor".into(),
+                field: "link_layer_id".into(),
+                value: "aa:bb:cc:dd:ee:ff".into(),
+            },
+            NativeField {
+                source: "passive_neighbor".into(),
+                field: "role".into(),
+                value: "logical_context_only".into(),
+            },
+        ];
+        let result = redact(&fields, PrivacyMode::Metadata, &[8; 32]).unwrap();
+        assert!(!result.fields.contains_key("passive_neighbor.address"));
+        assert!(!result.fields.contains_key("passive_neighbor.link_layer_id"));
+        assert_eq!(
+            result.fields.get("passive_neighbor.role").map(String::as_str),
+            Some("logical_context_only")
+        );
     }
 
     #[test]

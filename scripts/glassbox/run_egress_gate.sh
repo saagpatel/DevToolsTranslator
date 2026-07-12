@@ -3,14 +3,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HOSTILE_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-hostile-egress.XXXXXX")"
 BROKER_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-broker-egress.XXXXXX")"
-trap 'rm -f "$HOSTILE_RECEIPT" "$BROKER_RECEIPT"' EXIT
+PASSIVE_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-passive-egress.XXXXXX")"
+trap 'rm -f "$HOSTILE_RECEIPT" "$BROKER_RECEIPT" "$PASSIVE_RECEIPT"' EXIT
 
 python3 "$ROOT/scripts/glassbox/check_boundaries.py" --self-test >/dev/null
 python3 "$ROOT/scripts/glassbox/check_boundaries.py" >/dev/null
 "$ROOT/scripts/glassbox/run_hostile_import_gate.sh" "$HOSTILE_RECEIPT" >/dev/null
 "$ROOT/scripts/glassbox/run_otlp_broker_gate.sh" >"$BROKER_RECEIPT"
+"$ROOT/scripts/glassbox/run_passive_context_gate.sh" "$PASSIVE_RECEIPT" >/dev/null
 
-python3 - "$ROOT" "$HOSTILE_RECEIPT" "$BROKER_RECEIPT" <<'PY'
+python3 - "$ROOT" "$HOSTILE_RECEIPT" "$BROKER_RECEIPT" "$PASSIVE_RECEIPT" <<'PY'
 import json
 import pathlib
 import re
@@ -20,6 +22,7 @@ import sys
 root = pathlib.Path(sys.argv[1])
 hostile = json.loads(pathlib.Path(sys.argv[2]).read_text())
 broker = json.loads(pathlib.Path(sys.argv[3]).read_text())
+passive = json.loads(pathlib.Path(sys.argv[4]).read_text())
 protected = [
     root / "crates/glassbox-contracts",
     root / "crates/glassbox-kernel",
@@ -53,6 +56,9 @@ checks = {
     "sandboxed_worker_network_entitlements_absent": hostile.get("checks", {}).get("network_entitlements_absent") is True,
     "loopback_broker_separately_accounted": broker.get("checks", {}).get("ipv4_loopback_runtime") is True and broker.get("checks", {}).get("ipv6_loopback_runtime") is True,
     "loopback_broker_outbound_denied": broker.get("checks", {}).get("outbound_denied_by_sandbox") is True,
+    "passive_context_broker_separately_accounted": passive.get("checks", {}).get("ordinary_live_snapshot_passes") is True,
+    "passive_context_has_no_network_or_privileged_entitlements": passive.get("checks", {}).get("no_network_or_privileged_entitlements") is True,
+    "passive_context_active_scan_rejected": passive.get("checks", {}).get("active_scan_operation_rejected") is True,
 }
 def git(*args):
     result = subprocess.run(["git", *args], cwd=root, text=True, capture_output=True)
@@ -66,10 +72,10 @@ receipt = {
     "checks": checks,
     "unexpected_source_hits": hits,
     "broker_binary_sha256": broker.get("binary_sha256"),
+    "passive_context_binary_sha256": passive.get("binary_sha256"),
     "runtime_checks_remaining": [
         "signed core app entitlement inspection",
         "OS network-syscall monitoring across fixture/import/browse/compare/export workflows",
-        "separate accounting for future passive-context broker",
     ],
 }
 print(json.dumps(receipt, indent=2, sort_keys=True))

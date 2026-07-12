@@ -1,0 +1,2 @@
+? (192.0.2.1) at aa:bb:cc:dd:ee:1 on en0 ifscope [ethernet]
+? (192.0.2.2) at (incomplete) on en0 ifscope [ethernet]
