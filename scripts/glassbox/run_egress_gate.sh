@@ -5,7 +5,8 @@ HOSTILE_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-hostile-egress.XXXXXX")"
 BROKER_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-broker-egress.XXXXXX")"
 PASSIVE_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-passive-egress.XXXXXX")"
 MACOS_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-macos-egress.XXXXXX")"
-trap 'rm -f "$HOSTILE_RECEIPT" "$BROKER_RECEIPT" "$PASSIVE_RECEIPT" "$MACOS_RECEIPT"' EXIT
+NETWORK_RUNTIME_RECEIPT="$(mktemp "${TMPDIR:-/tmp}/glassbox-network-runtime-egress.XXXXXX")"
+trap 'rm -f "$HOSTILE_RECEIPT" "$BROKER_RECEIPT" "$PASSIVE_RECEIPT" "$MACOS_RECEIPT" "$NETWORK_RUNTIME_RECEIPT"' EXIT
 
 python3 "$ROOT/scripts/glassbox/check_boundaries.py" --self-test >/dev/null
 python3 "$ROOT/scripts/glassbox/check_boundaries.py" >/dev/null
@@ -13,8 +14,9 @@ python3 "$ROOT/scripts/glassbox/check_boundaries.py" >/dev/null
 "$ROOT/scripts/glassbox/run_otlp_broker_gate.sh" >"$BROKER_RECEIPT"
 "$ROOT/scripts/glassbox/run_passive_context_gate.sh" "$PASSIVE_RECEIPT" >/dev/null
 "$ROOT/scripts/glassbox/run_macos_artifact_readiness.sh" "$MACOS_RECEIPT" >/dev/null
+"$ROOT/scripts/glassbox/run_network_runtime_gate.sh" "$NETWORK_RUNTIME_RECEIPT" >/dev/null
 
-python3 - "$ROOT" "$HOSTILE_RECEIPT" "$BROKER_RECEIPT" "$PASSIVE_RECEIPT" "$MACOS_RECEIPT" <<'PY'
+python3 - "$ROOT" "$HOSTILE_RECEIPT" "$BROKER_RECEIPT" "$PASSIVE_RECEIPT" "$MACOS_RECEIPT" "$NETWORK_RUNTIME_RECEIPT" <<'PY'
 import json
 import pathlib
 import re
@@ -26,6 +28,7 @@ hostile = json.loads(pathlib.Path(sys.argv[2]).read_text())
 broker = json.loads(pathlib.Path(sys.argv[3]).read_text())
 passive = json.loads(pathlib.Path(sys.argv[4]).read_text())
 macos = json.loads(pathlib.Path(sys.argv[5]).read_text())
+network_runtime = json.loads(pathlib.Path(sys.argv[6]).read_text())
 protected = [
     root / "crates/glassbox-contracts",
     root / "crates/glassbox-kernel",
@@ -37,6 +40,7 @@ protected = [
     root / "crates/glassbox-browser-ipc",
     root / "crates/glassbox-live-source",
     root / "apps/glassbox-desktop/src-tauri",
+    root / "scripts/glassbox/workflow-probe",
 ]
 forbidden_source = re.compile(r"\b(?:TcpStream|TcpListener|UdpSocket|reqwest|tokio_tungstenite)\b|\bfetch\s*\(")
 hits = []
@@ -65,6 +69,10 @@ checks = {
     "passive_context_active_scan_rejected": passive.get("checks", {}).get("active_scan_operation_rejected") is True,
     "signed_core_app_sandbox_only": macos.get("local_checks", {}).get("app_sandbox_only_entitlement") is True,
     "signed_core_app_network_entitlements_absent": macos.get("local_checks", {}).get("network_and_privileged_entitlements_absent") is True,
+    "complete_workflow_os_socket_monitor": network_runtime.get("ok") is True
+        and network_runtime.get("checks", {}).get("observer_positive_control_detected_socket") is True
+        and network_runtime.get("checks", {}).get("workflow_os_socket_rows_absent") is True
+        and network_runtime.get("phases") == ["fixture", "import", "browse", "compare", "export"],
 }
 def git(*args):
     result = subprocess.run(["git", *args], cwd=root, text=True, capture_output=True)
@@ -80,9 +88,9 @@ receipt = {
     "broker_binary_sha256": broker.get("binary_sha256"),
     "passive_context_binary_sha256": passive.get("binary_sha256"),
     "signed_core_app_sha256": macos.get("app_sha256"),
-    "runtime_checks_remaining": [
-        "OS network-syscall monitoring across fixture/import/browse/compare/export workflows",
-    ],
+    "network_runtime_binary_sha256": network_runtime.get("workflow_binary_sha256"),
+    "network_runtime_monitor_sha256": network_runtime.get("monitor_sha256"),
+    "runtime_checks_remaining": [],
 }
 print(json.dumps(receipt, indent=2, sort_keys=True))
 raise SystemExit(0 if receipt["ok"] else 1)

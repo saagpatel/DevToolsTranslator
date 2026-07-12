@@ -13,6 +13,7 @@ members = [
   "crates/glassbox-privacy",
   "apps/glassbox-import-worker",
   "crates/glassbox-fixtures",
+  "scripts/glassbox/workflow-probe",
   "apps/desktop-tauri/src-tauri",
   "crates/dtt-core",
   "crates/dtt-storage",

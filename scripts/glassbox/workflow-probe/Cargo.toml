@@ -1,0 +1,14 @@
+[package]
+name = "glassbox-workflow-probe"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glassbox-contracts = { path = "../../../crates/glassbox-contracts" }
+glassbox-fixtures = { path = "../../../crates/glassbox-fixtures" }
+glassbox-import = { path = "../../../crates/glassbox-import" }
+glassbox-investigation = { path = "../../../crates/glassbox-investigation" }
+glassbox-kernel = { path = "../../../crates/glassbox-kernel" }
+glassbox-privacy = { path = "../../../crates/glassbox-privacy" }
+serde_json.workspace = true

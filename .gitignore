@@ -7,3 +7,4 @@ apps/glassbox-desktop/src-tauri/gen/
 artifacts/glassbox-macos-artifact-readiness.json
 artifacts/glassbox-lifecycle.json
 artifacts/glassbox-retirement-readiness.json
+artifacts/glassbox-network-runtime.json

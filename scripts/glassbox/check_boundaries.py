@@ -31,6 +31,7 @@ NETWORK_FORBIDDEN_BY_CLASS = {
     "glassbox_ui": {"axios", "got", "node-fetch"},
     "glassbox_stdio_broker": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
     "glassbox_shell": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
+    "glassbox_test": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite", "axios", "got", "node-fetch"},
 }
 
 def sha256(path: Path) -> str:

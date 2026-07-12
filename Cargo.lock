@@ -1577,6 +1577,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "glassbox-workflow-probe"
+version = "0.1.0"
+dependencies = [
+ "glassbox-contracts",
+ "glassbox-fixtures",
+ "glassbox-import",
+ "glassbox-investigation",
+ "glassbox-kernel",
+ "glassbox-privacy",
+ "serde_json",
+]
+
+[[package]]
 name = "glib"
 version = "0.18.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

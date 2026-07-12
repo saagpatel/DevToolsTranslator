@@ -28,7 +28,8 @@
     {"path":"apps/glassbox-ui","class":"glassbox_ui","disposition":"planned_included","present":true},
     {"path":"apps/glassbox-desktop/src-tauri","class":"glassbox_shell","disposition":"planned_included","present":true},
     {"path":"crates/glassbox-fixtures","class":"glassbox_test","disposition":"test_only","present":true},
-    {"path":"scripts/glassbox/storage-spike","class":"glassbox_test","disposition":"test_only","present":true}
+    {"path":"scripts/glassbox/storage-spike","class":"glassbox_test","disposition":"test_only","present":true},
+    {"path":"scripts/glassbox/workflow-probe","class":"glassbox_test","disposition":"test_only","present":true}
   ],
   "governed_surfaces": [".gitignore","Cargo.toml","Cargo.lock","package.json","pnpm-lock.yaml","pnpm-workspace.yaml","glassbox-runtime","apps","crates","packages","scripts",".github"],
   "opaque_assets": [
