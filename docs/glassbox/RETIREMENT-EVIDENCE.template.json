@@ -1,0 +1,21 @@
+{
+  "schema_version": "glassbox-retirement-evidence/v1",
+  "candidate": null,
+  "as_of": null,
+  "parity": {
+    "workflows": [],
+    "migration_instructions": null,
+    "import_compatibility": {"passed": null, "evidence": {"path": null, "sha256": null}},
+    "export_compatibility": {"passed": null, "evidence": {"path": null, "sha256": null}}
+  },
+  "glassbox_releases": [],
+  "benchmark": {"benchmark_passed": null, "gate6_promotable": null, "evidence": {"path": null, "sha256": null}},
+  "soak": {"started_at": null, "ended_at": null, "incident_count": null},
+  "open_critical_defects": [],
+  "defect_scan": {"checked_at": null, "evidence": {"path": null, "sha256": null}},
+  "expert_workflow": {"verified": null, "surface": null, "evidence": {"path": null, "sha256": null}},
+  "donor_final_release": {"tag": null, "commit": null, "clean": null, "dependency_posture": {"path": null, "sha256": null}, "security_posture": {"path": null, "sha256": null}},
+  "rollback": {"instructions": null, "artifact": {"path": null, "sha256": null}, "post_retirement_path": null},
+  "archive": {"read_only": null, "remote_verified": null, "preserve_tags": null, "preserve_releases": null, "preserve_source": null, "preserve_issues_and_decisions": null, "final_readme": {"path": null, "sha256": null}},
+  "approval": {"approved": null, "role": "product_authority", "signer": null, "approved_at": null, "artifact": {"path": null, "sha256": null}}
+}
