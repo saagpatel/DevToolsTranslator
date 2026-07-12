@@ -12,6 +12,7 @@ python3 - "$ROOT" "$HOSTILE_RECEIPT" <<'PY'
 import json
 import pathlib
 import re
+import subprocess
 import sys
 
 root = pathlib.Path(sys.argv[1])
@@ -48,9 +49,15 @@ checks = {
     "sandboxed_worker_socket_negative_test": hostile.get("checks", {}).get("worker_no_network_self_test") is True,
     "sandboxed_worker_network_entitlements_absent": hostile.get("checks", {}).get("network_entitlements_absent") is True,
 }
+def git(*args):
+    result = subprocess.run(["git", *args], cwd=root, text=True, capture_output=True)
+    return result.stdout.strip() if result.returncode == 0 else "unknown"
 receipt = {
     "schema_version": "glassbox-egress/v1",
     "ok": all(checks.values()),
+    "git_head": git("rev-parse", "HEAD"),
+    "git_tree": git("rev-parse", "HEAD^{tree}"),
+    "git_dirty": bool(git("status", "--porcelain")),
     "checks": checks,
     "unexpected_source_hits": hits,
     "runtime_checks_remaining": [
