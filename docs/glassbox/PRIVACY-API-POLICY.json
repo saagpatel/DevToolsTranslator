@@ -1,0 +1,30 @@
+{
+  "schema_version": "glassbox-privacy-api-policy/v1",
+  "platform": "macos",
+  "reviewed_at": "2026-07-12T00:00:00Z",
+  "max_age_days": 90,
+  "apple_policy": {
+    "privacy_manifest_required": true,
+    "required_reason_enforcement_applies": false,
+    "required_reason_platforms": ["ios", "ipados", "tvos", "visionos", "watchos"],
+    "sources": [
+      "https://developer.apple.com/documentation/bundleresources/privacy-manifest-files",
+      "https://developer.apple.com/documentation/bundleresources/adding-a-privacy-manifest-to-your-app-or-third-party-sdk",
+      "https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api",
+      "https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitype"
+    ]
+  },
+  "manifest_accessed_api_types": [],
+  "categories": {
+    "NSPrivacyAccessedAPICategoryFileTimestamp": {
+      "undefined_symbols": ["_fgetattrlist", "_fstat", "_fstatat", "_getattrlist", "_getattrlistat", "_getattrlistbulk", "_lstat", "_stat"],
+      "binary_strings": ["contentModificationDateKey", "creationDateKey", "fileModificationDate"],
+      "reviewed_matches": ["symbol:_fstat", "symbol:_lstat", "symbol:_stat"],
+      "review_disposition": "Linked Tauri and Rust filesystem runtime surface in the macOS shell; no tracking or collection, and macOS is outside Apple's required-reason enforcement platforms. Any symbol drift reopens review."
+    },
+    "NSPrivacyAccessedAPICategorySystemBootTime": {"undefined_symbols": ["_mach_absolute_time"], "binary_strings": ["systemUptime"], "reviewed_matches": [], "review_disposition": "Not present in the reviewed artifact."},
+    "NSPrivacyAccessedAPICategoryDiskSpace": {"undefined_symbols": ["_fstatfs", "_fstatvfs", "_statfs", "_statvfs"], "binary_strings": ["systemFreeSize", "systemSize", "volumeAvailableCapacityForImportantUsageKey", "volumeAvailableCapacityForOpportunisticUsageKey", "volumeAvailableCapacityKey", "volumeTotalCapacityKey"], "reviewed_matches": [], "review_disposition": "Not present in the reviewed artifact."},
+    "NSPrivacyAccessedAPICategoryActiveKeyboards": {"undefined_symbols": [], "binary_strings": ["activeInputModes"], "reviewed_matches": [], "review_disposition": "Not present in the reviewed artifact."},
+    "NSPrivacyAccessedAPICategoryUserDefaults": {"undefined_symbols": ["_OBJC_CLASS_$_NSUserDefaults"], "binary_strings": ["NSUserDefaults", "UserDefaults"], "reviewed_matches": [], "review_disposition": "Not present in the reviewed artifact."}
+  }
+}

@@ -16,6 +16,10 @@ cat >"$APP/Contents/Info.plist" <<'PLIST'
 <plist version="1.0"><dict><key>CFBundleExecutable</key><string>Glassbox</string><key>CFBundleIdentifier</key><string>com.glassbox.desktop</string><key>CFBundleName</key><string>Glassbox</string><key>CFBundleDisplayName</key><string>Glassbox</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>0.1.0</string><key>CFBundleVersion</key><string>1</string><key>LSMinimumSystemVersion</key><string>13.0</string><key>NSHighResolutionCapable</key><true/></dict></plist>
 PLIST
 codesign --force --timestamp --options runtime --entitlements "$ROOT/apps/glassbox-desktop/src-tauri/entitlements.plist" --sign "$IDENTITY" "$APP" >/dev/null
+PRIVACY_RECEIPT="$TEMP/privacy-artifact.json"
+python3 "$ROOT/scripts/glassbox/privacy_artifact_audit.py" --self-test >/dev/null
+python3 "$ROOT/scripts/glassbox/privacy_artifact_audit.py" --binary "$BIN" --manifest "$APP/Contents/Resources/PrivacyInfo.xcprivacy" --policy "$ROOT/docs/glassbox/PRIVACY-API-POLICY.json" --receipt "$PRIVACY_RECEIPT" >/dev/null
+export GLASSBOX_PRIVACY_AUDIT_RECEIPT="$PRIVACY_RECEIPT"
 CONTAINER="$HOME/Library/Containers/com.glassbox.desktop"; CONTAINER_EXISTED=0; [[ -e "$CONTAINER" ]] && CONTAINER_EXISTED=1
 mkdir -p "$TEMP/runtime-home"; HOME="$TEMP/runtime-home" CFFIXED_USER_HOME="$TEMP/runtime-home" "$BIN" >"$TEMP/runtime.stdout" 2>"$TEMP/runtime.stderr" & RUNTIME_PID=$!
 sleep 2
