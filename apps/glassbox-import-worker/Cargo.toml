@@ -1,0 +1,12 @@
+[package]
+name = "glassbox-import-worker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glassbox-contracts = { path = "../../crates/glassbox-contracts" }
+glassbox-import = { path = "../../crates/glassbox-import" }
+serde = { workspace = true }
+serde_json.workspace = true
+thiserror.workspace = true

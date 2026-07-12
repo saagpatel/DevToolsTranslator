@@ -4,6 +4,7 @@ members = [
   "crates/glassbox-contracts",
   "crates/glassbox-kernel",
   "crates/glassbox-import",
+  "apps/glassbox-import-worker",
   "crates/glassbox-fixtures",
   "apps/desktop-tauri/src-tauri",
   "crates/dtt-core",

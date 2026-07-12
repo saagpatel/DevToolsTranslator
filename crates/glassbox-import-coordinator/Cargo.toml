@@ -13,6 +13,7 @@ thiserror.workspace = true
 
 [dev-dependencies]
 glassbox-fixtures = { path = "../glassbox-fixtures" }
+glassbox-import-worker = { path = "../../apps/glassbox-import-worker" }
 glassbox-storage-sqlite = { path = "../glassbox-storage-sqlite", features = ["test-hooks"] }
 serde_json.workspace = true
 tempfile = "3"

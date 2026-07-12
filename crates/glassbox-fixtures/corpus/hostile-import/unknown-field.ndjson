@@ -1,0 +1,1 @@
+{"type":"observation","observation":{"semantic_id":"obs:fixture-1","materialization_id":"mat-fixture-1","lineage_id":"lineage-fixture-1","source_kind":"fixture","capture_session":"session-1","native_id":"native-1","observed_time":{"earliest_ns":"100","latest_ns":"200"},"trust":"UnsignedImport","fields":{}},"surprise":true}

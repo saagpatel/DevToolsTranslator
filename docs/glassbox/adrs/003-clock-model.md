@@ -7,6 +7,8 @@ Owner: kernel owner
 
 Represent event time as a bounded interval in a named clock domain, not a scalar global timestamp. A clock descriptor records source clock type, unit, resolution, calibration anchors, offset estimate, drift/error bound, boot/sleep/reset segment, and whether the clock is local, imported, or remote.
 
+Nanosecond bounds use signed 128-bit integers in the Rust kernel and canonical decimal strings on JSON/IPC wires. JSON numbers are forbidden for these bounds because browser and JavaScript intermediaries cannot preserve the full integer range.
+
 For interval `A=[a0,a1]` and `B=[b0,b1]`:
 
 - `A before B` only when `a1 < b0` or the source asserts an addressable ordering.

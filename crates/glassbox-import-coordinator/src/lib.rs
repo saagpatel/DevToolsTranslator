@@ -62,6 +62,7 @@ mod tests {
     use super::*;
     use glassbox_fixtures::gate1_fixture;
     use std::env;
+    use std::io::Cursor;
     use std::path::Path;
     use std::process::Command;
 
@@ -84,6 +85,31 @@ mod tests {
         assert_eq!(coordinator.publish("batch-1", batch()).unwrap().inserted, 2);
         assert!(coordinator.publish("batch-1", batch()).unwrap().replayed);
         assert_eq!(coordinator.repository().observation_count().unwrap(), 2);
+    }
+
+    #[test]
+    fn worker_frames_publish_only_after_complete_end_frame() {
+        let observation = &batch().observations[0];
+        let input = serde_json::to_vec(
+            &serde_json::json!({"type":"observation","observation":observation}),
+        )
+        .unwrap();
+        let mut encoded = Vec::new();
+        glassbox_import_worker::translate(Cursor::new(input), &mut encoded, "fixture-v1").unwrap();
+        let mut frames = Vec::new();
+        let mut remaining = encoded.as_slice();
+        while !remaining.is_empty() {
+            let length = u32::from_be_bytes(remaining[..4].try_into().unwrap()) as usize;
+            frames.push(remaining[4..4 + length].to_vec());
+            remaining = &remaining[4 + length..];
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let repository =
+            SqlCipherRepository::create(&temp.path().join("store.sqlite3"), [13; 32]).unwrap();
+        let mut coordinator = ImportCoordinator::new(repository);
+        let slices: Vec<&[u8]> = frames.iter().map(Vec::as_slice).collect();
+        assert_eq!(coordinator.publish_frames("worker-batch", slices).unwrap().inserted, 1);
+        assert_eq!(coordinator.repository().observation_count().unwrap(), 1);
     }
 
     #[test]

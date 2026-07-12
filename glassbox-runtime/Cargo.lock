@@ -161,10 +161,22 @@ version = "0.1.0"
 dependencies = [
  "glassbox-fixtures",
  "glassbox-import",
+ "glassbox-import-worker",
  "glassbox-kernel",
  "glassbox-storage-sqlite",
  "serde_json",
  "tempfile",
+ "thiserror",
+]
+
+[[package]]
+name = "glassbox-import-worker"
+version = "0.1.0"
+dependencies = [
+ "glassbox-contracts",
+ "glassbox-import",
+ "serde",
+ "serde_json",
  "thiserror",
 ]
 

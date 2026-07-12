@@ -31,8 +31,23 @@ pub struct LineageId(pub String);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TimeInterval {
+    #[serde(with = "i128_decimal")]
     pub earliest_ns: i128,
+    #[serde(with = "i128_decimal")]
     pub latest_ns: i128,
+}
+
+mod i128_decimal {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(value: &i128, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&value.to_string())
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<i128, D::Error> {
+        let value = String::deserialize(deserializer)?;
+        value.parse().map_err(serde::de::Error::custom)
+    }
 }
 
 impl TimeInterval {
