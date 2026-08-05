@@ -1,0 +1,34 @@
+{
+  "schema_version": "glassbox-lifecycle-fresh-vm/v1",
+  "ok": false,
+  "candidate_manifest_sha256": "replace-with-frozen-candidate-manifest-sha256",
+  "app_binary_sha256": "replace-with-final-app-binary-sha256",
+  "helper_sha256": "replace-with-final-helper-sha256",
+  "dmg_sha256": "replace-with-final-dmg-sha256",
+  "macos_version": "replace-with-tested-version",
+  "tester": {"identity": "replace-with-tester", "role": "independent_fresh_vm_tester", "tested_at": "replace-with-RFC3339-timestamp"},
+  "checks": {
+    "fresh_vm_confirmed": false,
+    "gatekeeper_before_first_launch": false,
+    "install": false,
+    "first_launch_permission_denial": false,
+    "update_preserves_investigations": false,
+    "downgrade_rejected": false,
+    "credential_revoke": false,
+    "reset_owned_state_only": false,
+    "uninstall": false,
+    "reinstall": false,
+    "keychain_restart_and_delete": false,
+    "security_scoped_bookmark_revoke": false,
+    "user_exports_preserved": false,
+    "no_owned_residue": false,
+    "sandbox_and_entitlements_unchanged": false
+  },
+  "evidence_files": [
+    {"kind": "install_update", "path": "install-update.txt", "sha256": "replace-with-sha256"},
+    {"kind": "permission_denial", "path": "permission-denial.txt", "sha256": "replace-with-sha256"},
+    {"kind": "credential_lifecycle", "path": "credential-lifecycle.txt", "sha256": "replace-with-sha256"},
+    {"kind": "uninstall_residue", "path": "uninstall-residue.txt", "sha256": "replace-with-sha256"},
+    {"kind": "user_work_preservation", "path": "user-work-preservation.txt", "sha256": "replace-with-sha256"}
+  ]
+}

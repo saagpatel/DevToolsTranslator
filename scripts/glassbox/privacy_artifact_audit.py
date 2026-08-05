@@ -20,15 +20,18 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def inventory(binary: Path, policy: dict) -> tuple[dict[str, list[str]], list[str]]:
-    nm = run("nm", "-u", str(binary)); strings = run("strings", str(binary)); errors = []
-    if nm.returncode: errors.append("nm could not inspect the final executable")
-    if strings.returncode: errors.append("strings could not inspect the final executable")
-    undefined = {line.strip().split()[-1] for line in nm.stdout.splitlines() if line.strip()}
+def inventory(binaries: list[Path], policy: dict) -> tuple[dict[str, list[str]], list[str]]:
+    errors = []; undefined = set(); string_text = ""
+    for binary in binaries:
+        nm = run("nm", "-u", str(binary)); strings = run("strings", str(binary))
+        if nm.returncode: errors.append(f"nm could not inspect executable: {binary.name}")
+        if strings.returncode: errors.append(f"strings could not inspect executable: {binary.name}")
+        undefined.update(line.strip().split()[-1] for line in nm.stdout.splitlines() if line.strip())
+        string_text += strings.stdout
     observed = {}
     for category, rule in policy.get("categories", {}).items():
         matches = [f"symbol:{symbol}" for symbol in rule.get("undefined_symbols", []) if symbol in undefined]
-        matches.extend(f"string:{token}" for token in rule.get("binary_strings", []) if token in strings.stdout)
+        matches.extend(f"string:{token}" for token in rule.get("binary_strings", []) if token in string_text)
         observed[category] = sorted(set(matches))
     return observed, errors
 
@@ -44,7 +47,7 @@ def compare(observed: dict[str, list[str]], policy: dict) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(); parser.add_argument("--self-test", action="store_true")
-    parser.add_argument("--binary", type=Path); parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--binary", type=Path); parser.add_argument("--companion-binary", type=Path); parser.add_argument("--manifest", type=Path)
     parser.add_argument("--policy", type=Path); parser.add_argument("--receipt", type=Path); args = parser.parse_args()
     if args.self_test:
         rejected = compare({"boot": ["symbol:_mach_absolute_time"]}, {"categories": {"boot": {"reviewed_matches": []}}})
@@ -68,8 +71,9 @@ def main() -> int:
     if set(manifest) != expected_manifest_keys: errors.append("privacy manifest keys are not exact")
     if manifest.get("NSPrivacyTracking") is not False or manifest.get("NSPrivacyTrackingDomains") != [] or manifest.get("NSPrivacyCollectedDataTypes") != []: errors.append("privacy manifest claims tracking, domains, or collected data")
     if manifest.get("NSPrivacyAccessedAPITypes") != policy.get("manifest_accessed_api_types"): errors.append("privacy manifest accessed API types drifted from reviewed macOS policy")
-    observed, inspection_errors = inventory(args.binary, policy); errors.extend(inspection_errors); errors.extend(compare(observed, policy))
-    receipt = {"schema_version": "glassbox-privacy-artifact/v1", "ok": not errors, "binary_sha256": sha256(args.binary) if args.binary.is_file() else None, "manifest_sha256": sha256(args.manifest) if args.manifest.is_file() else None, "policy_sha256": sha256(args.policy) if args.policy.is_file() else None, "platform": "macos", "policy_age_days": age_days, "apple_required_reason_enforcement_applies": apple.get("required_reason_enforcement_applies"), "observed_categories": observed, "manifest_accessed_api_types": manifest.get("NSPrivacyAccessedAPITypes"), "errors": errors}
+    binaries = [args.binary] + ([args.companion_binary] if args.companion_binary else [])
+    observed, inspection_errors = inventory(binaries, policy); errors.extend(inspection_errors); errors.extend(compare(observed, policy))
+    receipt = {"schema_version": "glassbox-privacy-artifact/v1", "ok": not errors, "binary_sha256": sha256(args.binary) if args.binary.is_file() else None, "companion_binary_sha256": sha256(args.companion_binary) if args.companion_binary and args.companion_binary.is_file() else None, "manifest_sha256": sha256(args.manifest) if args.manifest.is_file() else None, "policy_sha256": sha256(args.policy) if args.policy.is_file() else None, "platform": "macos", "policy_age_days": age_days, "apple_required_reason_enforcement_applies": apple.get("required_reason_enforcement_applies"), "observed_categories": observed, "manifest_accessed_api_types": manifest.get("NSPrivacyAccessedAPITypes"), "errors": errors}
     args.receipt.parent.mkdir(parents=True, exist_ok=True); args.receipt.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"); print(json.dumps(receipt, indent=2, sort_keys=True)); return 0 if receipt["ok"] else 1
 
 

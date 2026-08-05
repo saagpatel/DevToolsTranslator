@@ -5,6 +5,8 @@ Owner: release owner and privacy/security gatekeeper
 
 Gate 0's deterministic contract/source scanner is `scripts/glassbox/check_gate0.py`; CI runs it and its embedded failing self-test. It emits `glassbox-gate0-receipt/v2`. A `--precommit` receipt is explicitly provisional and may describe dirty or untracked draft files. Only an authoritative run from a clean commit, hashing required artifacts from `HEAD` and recording its tree ID, can promote the gate. Later gates extend the same fail-closed posture with executable IPC, import, key, redaction, egress, distribution, and uninstall suites at the paths named by their implementation plans.
 
+The native supported-file workflow is additionally bound by `scripts/glassbox/run_native_import_workflow_gate.sh`. It must reject a source-digest mismatch without stdout, exclude seeded secrets and selected paths, prove the exact two-entitlement app allowlist and entitlement-free helper, and complete the signed imported-workspace interaction set. A source-level Import button or a direct helper parse is not sufficient evidence for the end-to-end workflow.
+
 ## Required failing conditions
 
 Release and merge verification must inspect source, dependency graph, generated bundles, scripts, plists, entitlements, privacy manifest, and installed residue. Fail on:
@@ -15,7 +17,7 @@ Release and merge verification must inspect source, dependency graph, generated 
 - Unapproved `scripting`, `<all_urls>`, background tab enumeration, remote UI content, or permissive CSP.
 - Evidence egress outside declared loopback/local IPC and explicit user-reviewed export.
 - Secrets in URI, diagnostics, logs, screenshots, support bundles, crash data, or update telemetry.
-- Glassbox contracts/kernel depending on `dtt-core`, `dtt-storage`, Tauri, React, or donor repositories.
+- Glassbox contracts/kernel depending on `dtt-core`, `dtt-storage`, SwiftUI/AppKit, Tauri, React, or donor repositories; or the shipping shell linking WebKit/Tauri.
 
 ## Platform artifact proof
 

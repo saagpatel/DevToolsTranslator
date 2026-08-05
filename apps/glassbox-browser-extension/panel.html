@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Glassbox Selected Tab</title>
+    <link rel="stylesheet" href="panel.css">
+  </head>
+  <body>
+    <main>
+      <h1>Glassbox Selected Tab</h1>
+      <p>This visible session observes only the tab inspected by this DevTools window.</p>
+      <section aria-labelledby="boundary-title">
+        <h2 id="boundary-title">Evidence boundary</h2>
+        <ul>
+          <li>Retains timing, method, status, resource type, size, and pseudonymous URL structure.</li>
+          <li>Drops headers, cookies, credentials, bodies, raw hosts, path values, and query values.</li>
+          <li>Links request and response by a session-scoped pseudonym; it does not claim cause.</li>
+        </ul>
+      </section>
+      <div class="controls">
+        <button id="start" type="button">Start selected-tab capture</button>
+        <button id="marker" type="button" disabled>Add manual marker</button>
+        <button id="stop" type="button" disabled>Stop and seal evidence</button>
+      </div>
+      <p id="status" role="status" aria-live="polite">Ready. No capture is active.</p>
+      <p>Completed evidence is placed in the Glassbox Browser Adapter inbox for explicit export and offline Glassbox import.</p>
+    </main>
+    <script src="panel.js"></script>
+  </body>
+</html>

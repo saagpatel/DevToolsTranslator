@@ -8,7 +8,7 @@ TIME_LOG="$(mktemp "${TMPDIR:-/tmp}/glassbox-performance-time.XXXXXX")"
 trap 'rm -f "$OUTPUT" "$TIME_LOG"' EXIT
 
 CARGO_TARGET_DIR="$TARGET_DIR" cargo build --quiet --release --manifest-path "$ROOT/glassbox-runtime/Cargo.toml" -p glassbox-storage-sqlite --example performance_probe
-pnpm --dir "$ROOT/apps/glassbox-ui" test >/dev/null
-pnpm --dir "$ROOT/apps/glassbox-ui" build >/dev/null
+swift test --package-path "$ROOT/apps/glassbox-macos" >/dev/null
+swift build --package-path "$ROOT/apps/glassbox-macos" --configuration release >/dev/null
 /usr/bin/time -l "$TARGET_DIR/release/examples/performance_probe" 1000000 >"$OUTPUT" 2>"$TIME_LOG"
 python3 "$ROOT/scripts/glassbox/performance_gate.py" "$ROOT" "$OUTPUT" "$TIME_LOG" "$TARGET_DIR/release/examples/performance_probe" "$RECEIPT"

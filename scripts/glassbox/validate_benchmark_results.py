@@ -21,6 +21,7 @@ def validate(data, allow_test_fixture=False):
         if not condition: errors.append(code)
     require(data.get("schema_version") == SCHEMA, "schema_version")
     require(data.get("artifact_role") == "external_human_study", "artifact_role")
+    require(sha256_text(data.get("candidate_manifest_sha256")), "candidate_manifest_sha256")
     require(allow_test_fixture or data.get("test_fixture") is not True, "test_fixture_rejected")
     corpus = data.get("corpus_manifest", {})
     require(corpus.get("held_out") is True, "corpus_not_held_out")
@@ -70,6 +71,7 @@ def self_test():
     digest = "a" * 64
     valid = {
         "schema_version":SCHEMA,"artifact_role":"external_human_study","test_fixture":True,
+        "candidate_manifest_sha256":digest,
         "corpus_manifest":{"held_out":True,"family_count":5,"scenario_count":25,"sha256":digest,"pre_freeze_excluded_roles":["glassbox_implementer","scenario_designer"]},
         "pilot":{"human_participants":True,"agents_as_participants":False,"participant_count":10,"randomized":True,"counterbalanced":True,"efficacy_claimed":False,"variance_estimate":1.2},
         "power_analysis":{"computed_from_pilot":True,"formal_sample_size":24,"method":"paired simulation","primary_outcome":"time"},
@@ -93,7 +95,7 @@ def main():
     else:
         if args.artifact is None: parser.error("artifact is required unless --self-test is used")
         artifact_bytes=args.artifact.read_bytes(); data=json.loads(artifact_bytes); errors=validate(data)
-        result={"schema_version":"glassbox-benchmark/v1","ok":not errors,"benchmark_passed":not errors,"artifact":str(args.artifact),"artifact_sha256":hashlib.sha256(artifact_bytes).hexdigest(),"validator_sha256":hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest(),"held_out_corpus_sha256":data.get("corpus_manifest",{}).get("sha256"),"errors":errors,"verification_limit":"structural validation does not authenticate participant identity or external records"}
+        result={"schema_version":"glassbox-benchmark/v1","ok":not errors,"benchmark_passed":not errors,"artifact":str(args.artifact),"artifact_sha256":hashlib.sha256(artifact_bytes).hexdigest(),"validator_sha256":hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest(),"candidate_manifest_sha256":data.get("candidate_manifest_sha256"),"held_out_corpus_sha256":data.get("corpus_manifest",{}).get("sha256"),"errors":errors,"verification_limit":"structural validation does not authenticate participant identity or external records"}
     encoded=json.dumps(result,indent=2,sort_keys=True)+"\n"
     if args.receipt: args.receipt.parent.mkdir(parents=True,exist_ok=True); args.receipt.write_text(encoded)
     print(encoded,end=""); return 0 if result["ok"] else 1

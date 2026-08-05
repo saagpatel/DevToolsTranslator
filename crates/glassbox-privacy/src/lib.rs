@@ -65,6 +65,100 @@ pub const FIELD_RULES: &[FieldRule] = &[
     rule("otel", "span_name", DataClass::ContentSensitive, Transform::Drop, Transform::Pseudonym),
     rule("otel", "resource", DataClass::ContentSensitive, Transform::Drop, Transform::Pseudonym),
     rule("otel", "baggage", DataClass::Credential, Transform::Drop, Transform::Drop),
+    rule(
+        "otel",
+        "trace_id",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule("otel", "span_id", DataClass::MetadataSensitive, Transform::Preserve, Transform::Preserve),
+    rule(
+        "otel",
+        "parent_span_id",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule("otel", "span_kind", DataClass::Public, Transform::Preserve, Transform::Preserve),
+    rule(
+        "otel",
+        "status_code",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule("otel", "flags", DataClass::MetadataSensitive, Transform::Preserve, Transform::Preserve),
+    rule(
+        "otel",
+        "dropped_attributes",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "otel",
+        "dropped_events",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "otel",
+        "dropped_links",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "apple-unified-log",
+        "entry_kind",
+        DataClass::Public,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "apple-unified-log",
+        "level",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "apple-unified-log",
+        "process_id",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "apple-unified-log",
+        "thread_id",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "apple-unified-log",
+        "activity_id",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "apple-unified-log",
+        "signpost_id",
+        DataClass::MetadataSensitive,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
+    rule(
+        "apple-unified-log",
+        "signpost_type",
+        DataClass::Public,
+        Transform::Preserve,
+        Transform::Preserve,
+    ),
     rule("dns", "name", DataClass::ContentSensitive, Transform::Drop, Transform::Pseudonym),
     rule(
         "packet",
@@ -256,6 +350,22 @@ pub const SOURCE_SCHEMA_FIELDS: &[(&str, &str)] = &[
     ("otel", "span_name"),
     ("otel", "resource"),
     ("otel", "baggage"),
+    ("otel", "trace_id"),
+    ("otel", "span_id"),
+    ("otel", "parent_span_id"),
+    ("otel", "span_kind"),
+    ("otel", "status_code"),
+    ("otel", "flags"),
+    ("otel", "dropped_attributes"),
+    ("otel", "dropped_events"),
+    ("otel", "dropped_links"),
+    ("apple-unified-log", "entry_kind"),
+    ("apple-unified-log", "level"),
+    ("apple-unified-log", "process_id"),
+    ("apple-unified-log", "thread_id"),
+    ("apple-unified-log", "activity_id"),
+    ("apple-unified-log", "signpost_id"),
+    ("apple-unified-log", "signpost_type"),
     ("dns", "name"),
     ("packet", "capture_source"),
     ("packet", "section_index"),
@@ -584,6 +694,38 @@ mod tests {
             result.fields.get("passive_neighbor.role").map(String::as_str),
             Some("logical_context_only")
         );
+    }
+
+    #[test]
+    fn apple_log_projection_preserves_only_classified_metadata() {
+        let fields = [
+            NativeField {
+                source: "apple-unified-log".into(),
+                field: "process_id".into(),
+                value: "42".into(),
+            },
+            NativeField {
+                source: "apple-unified-log".into(),
+                field: "signpost_type".into(),
+                value: "begin".into(),
+            },
+            NativeField {
+                source: "apple-unified-log".into(),
+                field: "message".into(),
+                value: "seed-message-secret".into(),
+            },
+        ];
+        let result = redact(&fields, PrivacyMode::Metadata, &[9; 32]).unwrap();
+        assert_eq!(
+            result.fields.get("apple-unified-log.process_id").map(String::as_str),
+            Some("42")
+        );
+        assert_eq!(
+            result.fields.get("apple-unified-log.signpost_type").map(String::as_str),
+            Some("begin")
+        );
+        assert!(!result.fields.values().any(|value| value.contains("seed-message-secret")));
+        assert_eq!(result.quarantine.len(), 1);
     }
 
     #[test]

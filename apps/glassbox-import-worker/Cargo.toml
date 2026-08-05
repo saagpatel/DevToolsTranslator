@@ -5,9 +5,17 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+glassbox-apple-log-import = { path = "../../crates/glassbox-apple-log-import" }
 glassbox-contracts = { path = "../../crates/glassbox-contracts" }
 glassbox-import = { path = "../../crates/glassbox-import" }
+glassbox-har-import = { path = "../../crates/glassbox-har-import" }
+glassbox-otlp-import = { path = "../../crates/glassbox-otlp-import" }
+glassbox-evidence-bundle = { path = "../../crates/glassbox-evidence-bundle" }
 glassbox-network-import = { path = "../../crates/glassbox-network-import" }
 serde = { workspace = true }
 serde_json.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+glassbox-fixtures = { path = "../../crates/glassbox-fixtures" }
+sha2.workspace = true

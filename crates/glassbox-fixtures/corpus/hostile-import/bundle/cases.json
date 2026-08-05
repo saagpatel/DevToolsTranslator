@@ -1,0 +1,12 @@
+{
+  "schema_version": "glassbox-bundle-hostile-cases/v1",
+  "container": "fixed-member-no-extraction",
+  "cases": [
+    "valid",
+    "corrupt_member",
+    "truncated_member",
+    "trailing_data",
+    "unsupported_major",
+    "duplicate_semantic_id"
+  ]
+}

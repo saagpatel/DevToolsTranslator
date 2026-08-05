@@ -1,6 +1,7 @@
 {
   "schema_version": "glassbox-human-benchmark/v1",
   "artifact_role": "external_human_study",
+  "candidate_manifest_sha256": "replace-with-frozen-candidate-manifest-sha256",
   "corpus_manifest": {"held_out": null, "family_count": 5, "scenario_count": null, "sha256": null, "pre_freeze_excluded_roles": ["glassbox_implementer", "scenario_designer"]},
   "pilot": {"human_participants": null, "agents_as_participants": false, "participant_count": null, "randomized": null, "counterbalanced": null, "efficacy_claimed": false, "variance_estimate": null},
   "power_analysis": {"computed_from_pilot": null, "formal_sample_size": null, "method": null, "primary_outcome": null},

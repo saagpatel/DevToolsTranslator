@@ -1,0 +1,1 @@
+{"resourceSpans":[{"scopeSpans":[{"spans":[{"traceId":"5b8efff798038103d269b633813fc60c","spanId":"0102040800000001","name":"span","startTimeUnixNano":"100","endTimeUnixNano":"200","vendorExtension":{"seed":"secret"}}]}]}]}

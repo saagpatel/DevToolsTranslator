@@ -5,7 +5,11 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+glassbox-contracts = { path = "../../crates/glassbox-contracts" }
+glassbox-evidence-bundle = { path = "../../crates/glassbox-evidence-bundle" }
+glassbox-kernel = { path = "../../crates/glassbox-kernel" }
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 thiserror.workspace = true
 zeroize.workspace = true

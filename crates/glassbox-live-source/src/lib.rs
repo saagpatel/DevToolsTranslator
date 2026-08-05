@@ -13,6 +13,9 @@ type HmacSha256 = Hmac<Sha256>;
 
 pub const PROTOCOL_VERSION: u16 = 1;
 pub const ABSOLUTE_MAX_FRAME_BYTES: usize = 1024 * 1024;
+pub const ABSOLUTE_MAX_EVENTS: u64 = 100_000;
+pub const ABSOLUTE_MAX_TOTAL_BYTES: u64 = 256 * 1024 * 1024;
+pub const ABSOLUTE_MAX_EVENTS_PER_SECOND: u32 = 20_000;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LiveSourcePolicy {
@@ -27,8 +30,12 @@ impl LiveSourcePolicy {
         if self.max_frame_bytes == 0
             || self.max_frame_bytes > ABSOLUTE_MAX_FRAME_BYTES
             || self.max_events == 0
+            || self.max_events > ABSOLUTE_MAX_EVENTS
             || self.max_total_bytes == 0
+            || self.max_total_bytes > ABSOLUTE_MAX_TOTAL_BYTES
+            || self.max_total_bytes < self.max_frame_bytes as u64
             || self.max_events_per_second == 0
+            || self.max_events_per_second > ABSOLUTE_MAX_EVENTS_PER_SECOND
         {
             return Err(LiveSourceError::InvalidPolicy);
         }
@@ -58,6 +65,7 @@ pub enum GapReason {
     Revoked,
     EpochChanged,
     WatchdogTimeout,
+    InvalidPayload,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -260,7 +268,7 @@ fn credential_matches(expected: &str, candidate: &str) -> bool {
 
 #[derive(Debug, Error)]
 pub enum LiveSourceError {
-    #[error("live-source policy is zero or exceeds the absolute frame bound")]
+    #[error("live-source policy is zero, inconsistent, or exceeds an absolute quota")]
     InvalidPolicy,
     #[error("session or source identifier is invalid")]
     InvalidIdentifier,
@@ -308,6 +316,21 @@ mod tests {
             policy(),
         )
         .unwrap()
+    }
+
+    #[test]
+    fn policy_rejects_unbounded_or_internally_inconsistent_limits() {
+        for invalid in [
+            LiveSourcePolicy { max_events: ABSOLUTE_MAX_EVENTS + 1, ..policy() },
+            LiveSourcePolicy { max_total_bytes: ABSOLUTE_MAX_TOTAL_BYTES + 1, ..policy() },
+            LiveSourcePolicy {
+                max_events_per_second: ABSOLUTE_MAX_EVENTS_PER_SECOND + 1,
+                ..policy()
+            },
+            LiveSourcePolicy { max_total_bytes: 1024, max_frame_bytes: 4096, ..policy() },
+        ] {
+            assert!(matches!(invalid.validate(), Err(LiveSourceError::InvalidPolicy)));
+        }
     }
     fn frame(sequence: u64, epoch: u64, credential: &str) -> Vec<u8> {
         serde_json::to_vec(&LiveFrame {

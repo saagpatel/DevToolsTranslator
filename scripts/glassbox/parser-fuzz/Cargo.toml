@@ -1,0 +1,15 @@
+[package]
+name = "glassbox-parser-fuzz"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glassbox-apple-log-import = { path = "../../../crates/glassbox-apple-log-import" }
+glassbox-har-import = { path = "../../../crates/glassbox-har-import" }
+glassbox-network-import = { path = "../../../crates/glassbox-network-import" }
+glassbox-otlp-import = { path = "../../../crates/glassbox-otlp-import" }
+glassbox-evidence-bundle = { path = "../../../crates/glassbox-evidence-bundle" }
+glassbox-fixtures = { path = "../../../crates/glassbox-fixtures" }
+serde.workspace = true
+serde_json.workspace = true

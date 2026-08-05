@@ -19,8 +19,8 @@
     "NSPrivacyAccessedAPICategoryFileTimestamp": {
       "undefined_symbols": ["_fgetattrlist", "_fstat", "_fstatat", "_getattrlist", "_getattrlistat", "_getattrlistbulk", "_lstat", "_stat"],
       "binary_strings": ["contentModificationDateKey", "creationDateKey", "fileModificationDate"],
-      "reviewed_matches": ["symbol:_fstat", "symbol:_lstat", "symbol:_stat"],
-      "review_disposition": "Linked Tauri and Rust filesystem runtime surface in the macOS shell; no tracking or collection, and macOS is outside Apple's required-reason enforcement platforms. Any symbol drift reopens review."
+      "reviewed_matches": ["symbol:_fstat"],
+      "review_disposition": "Present in the reviewed native bundle through the Rust evidence helper and the SwiftUI/AppKit selected-artifact hasher. The Swift use is limited to user-selected local import files or trees, rejects links and non-regular files, and emits only a digest; it is not tracking or collection. macOS is outside Apple's required-reason enforcement platforms. Any bundle symbol drift reopens review."
     },
     "NSPrivacyAccessedAPICategorySystemBootTime": {"undefined_symbols": ["_mach_absolute_time"], "binary_strings": ["systemUptime"], "reviewed_matches": [], "review_disposition": "Not present in the reviewed artifact."},
     "NSPrivacyAccessedAPICategoryDiskSpace": {"undefined_symbols": ["_fstatfs", "_fstatvfs", "_statfs", "_statvfs"], "binary_strings": ["systemFreeSize", "systemSize", "volumeAvailableCapacityForImportantUsageKey", "volumeAvailableCapacityForOpportunisticUsageKey", "volumeAvailableCapacityKey", "volumeTotalCapacityKey"], "reviewed_matches": [], "review_disposition": "Not present in the reviewed artifact."},

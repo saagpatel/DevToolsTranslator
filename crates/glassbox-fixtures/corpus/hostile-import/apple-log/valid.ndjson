@@ -1,0 +1,4 @@
+{"type":"header","schema_version":"glassbox-apple-log-projection/v1","source_artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+{"type":"entry","ordinal":1,"timestamp_unix_ns":"1720000000000000000","entry_kind":"log","level":"info","process_id":42,"thread_id":7,"activity_id":9}
+{"type":"entry","ordinal":2,"timestamp_unix_ns":"1720000000001000000","entry_kind":"signpost","level":"notice","process_id":42,"thread_id":8,"activity_id":9,"signpost_id":11,"signpost_type":"begin"}
+{"type":"end","records":2,"stream_sha256":"abcbd473fa5a2b7872bb0405e8c885ab0adfecdf5a6d6b12486a908964417ec2"}

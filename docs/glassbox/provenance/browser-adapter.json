@@ -1,0 +1,34 @@
+{
+  "schema_version": "glassbox-provenance/v1",
+  "component": "separately distributed selected-tab browser adapter",
+  "implementation": "clean implementation using Chrome DevTools APIs, Chrome Native Messaging, native SwiftUI/AppKit lifecycle controls, and the Rust evidence kernel",
+  "donor_code_copied": false,
+  "legacy_extension_code_used": false,
+  "retained_contracts": [
+    "bounded explicit-session attachment",
+    "strict framed IPC with replay rejection",
+    "structural URL redaction before evidence publication",
+    "explicit stop before atomic evidence-bundle publication",
+    "offline import into the App-Sandboxed two-executable core",
+    "Unknown conclusion without sufficient evidence"
+  ],
+  "excluded_behavior": [
+    "browser host embedded in the core app bundle",
+    "network client or server in the browser adapter",
+    "headers, bodies, cookies, credentials, raw hostnames, paths, queries, or fragments",
+    "content scripts, arbitrary tab access, background capture, or host permissions",
+    "privileged entitlement, daemon, LaunchAgent, or XPC connection to the core",
+    "automatic epistemic upgrade from browser-origin observations"
+  ],
+  "trust_classification": "SignedUntrusted for browser observations; UserAsserted for explicit panel markers",
+  "core_boundary": "separately distributed; never embedded in or launched by the App-Sandboxed core; exports complete evidence bundles for explicit offline import",
+  "verification": [
+    "cargo test -p glassbox-browser-host -p glassbox-browser-ipc",
+    "cargo clippy -p glassbox-browser-host -p glassbox-browser-ipc --all-targets -- -D warnings",
+    "swift test --package-path apps/glassbox-browser-adapter-macos",
+    "scripts/glassbox/run_browser_adapter_gate.sh",
+    "scripts/glassbox/run_browser_ipc_gate.sh",
+    "scripts/glassbox/run_browser_artifact_readiness.sh",
+    "scripts/glassbox/run_egress_gate.sh"
+  ]
+}

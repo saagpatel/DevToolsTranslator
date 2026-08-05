@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Glassbox Selected Tab",
+  "version": "0.1.0",
+  "description": "Explicitly captures metadata-only evidence from the inspected DevTools tab.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuQgqjQ2RN/3OolJSdO9Pt4LFNI6gZFdRSwKwdDx65b8O+D7Y1lacXlughYJexvLZNf+pdhWvkmwOTwr4B23PZrbTH2Y/VvA5wC71hQ8lnPi63hcKzBRn3a8pWcxh7oQ4B2gSoQpah29wnwFr0jRqysReW/ttdmlA6vGQkPO77HM2AvuaJ9KsAkqlz9ifHXhe/XlZ/u8uKrOEz2wOcgqkUO/OQLTDzW6qMsVYQVznkcWPVRJ6VOaGlA9zsY0Go+0bREIAibcjJgH+71RyOg8uwiKOCORR3c74q6rXstqqO4LYbweS4SJGa7XYbzrEP/UR0qYoxnkaTJqdM4QvBnF1EQIDAQAB",
+  "permissions": ["nativeMessaging"],
+  "devtools_page": "devtools.html"
+}

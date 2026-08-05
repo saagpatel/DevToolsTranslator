@@ -40,7 +40,7 @@ Goldens score structured claims, relations, evidence, counterevidence, and missi
 
 ## Study sequence
 
-1. Freeze rubric, exclusions, comparator tasks, training, instrumentation, and analysis plan.
+1. Freeze the exact clean-tree candidate manifest, rubric, exclusions, comparator tasks, training, instrumentation, and analysis plan.
 2. Run a randomized, counterbalanced 10-12 participant pilot against the relevant existing toolchain.
 3. Use pilot variance for a power analysis; do not claim efficacy from the pilot.
 4. Pre-register the formal sample size, primary outcome, statistical test, exclusions, and stopping rule.
@@ -48,7 +48,7 @@ Goldens score structured claims, relations, evidence, counterevidence, and missi
 
 Agents may build fixtures and scoring tools but do not substitute for human participants.
 
-`scripts/glassbox/validate_benchmark_results.py` validates the required external artifact shape and product thresholds. Structural validation does not authenticate participant identity, preregistration, or study records; an independent reviewer must verify those primary sources. `scripts/glassbox/run_benchmark_readiness_gate.sh` must report `benchmark_passed: false` and `gate6_promotable: false` until a genuine external artifact passes that review and validation.
+`scripts/glassbox/validate_benchmark_results.py` validates the required external artifact shape, frozen-candidate digest, and product thresholds. Structural validation does not authenticate participant identity, preregistration, or study records; an independent reviewer must verify those primary sources and sign a second payload bound to both the study artifact and the same candidate manifest. `scripts/glassbox/run_benchmark_readiness_gate.sh` must report `benchmark_passed: false` and `gate6_promotable: false` until a genuine external artifact passes that review and validation.
 
 ## Product targets
 

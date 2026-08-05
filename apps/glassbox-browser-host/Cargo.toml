@@ -1,0 +1,18 @@
+[package]
+name = "glassbox-browser-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glassbox-browser-ipc = { path = "../../crates/glassbox-browser-ipc" }
+glassbox-contracts = { path = "../../crates/glassbox-contracts" }
+glassbox-evidence-bundle = { path = "../../crates/glassbox-evidence-bundle" }
+glassbox-kernel = { path = "../../crates/glassbox-kernel" }
+glassbox-privacy = { path = "../../crates/glassbox-privacy" }
+hex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true

@@ -27,6 +27,8 @@ Required identity components include:
 
 A semantic-ID collision with identical canonical content is an idempotent duplicate or an additional lineage/materialization reference. A collision with different content is a hard integrity error placed in quarantine. It never overwrites, merges, or moves an existing observation.
 
+The encrypted repository stores canonical semantic content separately from its materialization rows. Its schema-v2 migration transactionally backfills every schema-v1 observation as its original materialization before changing the schema version. Re-importing identical semantic content may append a new `(semantic ID, materialization ID, lineage ID)` record, while reusing that tuple with different bytes or changing any semantic field fails the entire batch.
+
 Lossless export/re-import preserves the semantic ID and source descriptor while creating new materialization and lineage IDs. Redaction or transformation preserves the semantic ID only when the semantic fields and locator remain equivalent; otherwise it creates an explicit alias mapping or identity-loss record.
 
 ## Rejected
@@ -35,4 +37,4 @@ Raw CDP IDs, PIDs, five-tuples, DNS transaction IDs, span IDs, timestamps, or ha
 
 ## Oracle
 
-Fixtures reuse the same native IDs across sources, sessions, redirects, process lifetimes, interfaces, and schema versions. Every record survives independently; retries are idempotent; conflicting collisions publish nothing; lossless round trips preserve semantic identity while changing materialization identity.
+Fixtures reuse the same native IDs across sources, sessions, redirects, process lifetimes, interfaces, and schema versions. Every record survives independently; retries are idempotent; conflicting collisions publish nothing; lossless bundle round trips preserve semantic identity, append changed materialization and lineage identities, and publish nothing when the worker stream is interrupted. Schema-v1 migration fixtures prove atomic backfill into the separate materialization table.

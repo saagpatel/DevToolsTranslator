@@ -1,10 +1,13 @@
 node_modules/
 **/dist/
 target/
+**/.build/
 .DS_Store
 pnpm-debug.log*
 apps/glassbox-desktop/src-tauri/gen/
+.codex/environments/
 artifacts/glassbox-macos-artifact-readiness.json
 artifacts/glassbox-lifecycle.json
 artifacts/glassbox-retirement-readiness.json
 artifacts/glassbox-network-runtime.json
+artifacts/glassbox-candidate-manifest.json

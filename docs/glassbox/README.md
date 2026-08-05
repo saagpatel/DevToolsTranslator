@@ -41,4 +41,4 @@ This directory is the normative Gate 0 contract. Existing DevTools Translator do
 - `BENCHMARK-PROTOCOL.md`
 - `RETIREMENT-PROTOCOL.md`
 - `GATE-0-DECISION-REGISTER.md`
-- `adrs/001-kernel-boundary.md` through `adrs/013-source-trust.md`
+- `adrs/001-kernel-boundary.md` through `adrs/015-otlp-adapter-distribution.md`

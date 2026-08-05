@@ -1,0 +1,16 @@
+[package]
+name = "glassbox-native-bridge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+glassbox-contracts = { path = "../../crates/glassbox-contracts" }
+glassbox-import = { path = "../../crates/glassbox-import" }
+glassbox-import-worker = { path = "../glassbox-import-worker" }
+glassbox-investigation = { path = "../../crates/glassbox-investigation" }
+glassbox-kernel = { path = "../../crates/glassbox-kernel" }
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+libc.workspace = true

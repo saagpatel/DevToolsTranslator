@@ -1,6 +1,7 @@
 {
   "schema_version": "glassbox-retirement-evidence/v1",
   "candidate": null,
+  "candidate_manifest_sha256": null,
   "as_of": null,
   "parity": {
     "workflows": [],

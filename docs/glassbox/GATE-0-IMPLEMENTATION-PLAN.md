@@ -14,6 +14,8 @@ After Gate 0 passes, add only:
 - `crates/glassbox-import-coordinator`
 - `apps/glassbox-import-worker`
 - `crates/glassbox-fixtures`
+- `apps/glassbox-native-bridge`
+- `apps/glassbox-macos`
 
 Before persistent schema work, run the ADR-007 encryption/App-Sandbox feasibility spike. Identity/time behavior may be proven in memory while that spike runs. The proof fixture contains two capture sessions with the same CDP native request ID, two overlapping clock domains, one source-asserted relation, one temporal candidate that must remain unordered, one duplicate retry, and one interrupted import.
 
@@ -35,10 +37,10 @@ Before persistent schema work, run the ADR-007 encryption/App-Sandbox feasibilit
 2. Migration interruption and property tests.
 3. Dependency-direction and negative-requirements checks.
 4. Full Cargo workspace format, clippy, test, and build.
-5. pnpm gates only if TypeScript/generated projections change.
+5. Swift package tests/build and signed native-shell interaction/artifact gates when the macOS projection changes.
 
 Package installation is not a verification step. Inspect existing dependency state and lockfiles first.
 
 ## Stop boundary
 
-Do not connect browser capture, Tauri UI, packet parsing, resource sampling, or donor code until the vertical slice proves identity, time, immutability, idempotency, atomic publication, and the encryption/App-Sandbox feasibility spike passes. If full per-investigation SQLite/WAL encryption cannot meet ADR-007, stop before persistent schema implementation.
+Do not connect browser capture, retired Tauri/React UI, packet parsing, resource sampling, or donor code until the vertical slice proves identity, time, immutability, idempotency, atomic publication, and the encryption/App-Sandbox feasibility spike passes. The native shell may render only the bounded fixture-first Rust projection until those gates pass. If full per-investigation SQLite/WAL encryption cannot meet ADR-007, stop before persistent schema implementation.

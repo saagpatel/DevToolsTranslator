@@ -1,0 +1,3 @@
+{"type":"header","schema_version":"glassbox-apple-log-projection/v1","source_artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+{"type":"entry","ordinal":1,"timestamp_unix_ns":"1720000000000000000","entry_kind":"log","level":"info","process_id":42,"thread_id":7,"activity_id":9,"message":"seed-message-secret"}
+{"type":"end","records":1,"stream_sha256":"0000000000000000000000000000000000000000000000000000000000000000"}

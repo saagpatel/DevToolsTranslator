@@ -30,7 +30,8 @@ REQUIRED_FILES = [
         (4,"evidence-ontology"),(5,"browser-ipc"),(6,"data-classification"),
         (7,"storage-lifecycle"),(8,"import-security"),(9,"redaction-export"),
         (10,"schema-evolution"),(11,"distribution-uninstall"),
-        (12,"egress-and-model-boundary"),(13,"source-trust")]],
+        (12,"egress-and-model-boundary"),(13,"source-trust"),
+        (14,"apple-import-adapters"),(15,"otlp-adapter-distribution")]],
 ]
 PROHIBITED = {
     "privileged_service": re.compile(r"SMAppService|LaunchDaemon|LaunchAgent|PrivilegedHelperTools", re.I),
@@ -99,7 +100,7 @@ def discovered_components() -> set[str]:
     for pattern in ("**/Cargo.toml", "**/package.json"):
         for path in ROOT.glob(pattern):
             rel = path.relative_to(ROOT).as_posix()
-            if any(part in {"target", "node_modules", ".git"} for part in path.parts):
+            if any(part in {"target", "node_modules", ".git", "dist", ".build"} for part in path.parts):
                 continue
             found.add(path.parent.relative_to(ROOT).as_posix() or ".")
     return found
@@ -166,7 +167,7 @@ def validate(precommit: bool, base_ref: str) -> tuple[list[str], dict]:
     if declared_exclusions != ALLOWED_EXCLUSIONS:
         errors.append("component manifest exclusions must exactly match checker-owned allowlist")
     for component in manifest.get("components", []):
-        if component.get("disposition") not in {"scaffold_only", "excluded", "planned_included", "test_only"}:
+        if component.get("disposition") not in {"scaffold_only", "excluded", "planned_included", "separate_distribution", "test_only"}:
             errors.append(f"component missing valid disposition: {component.get('path')}")
     head = run_git("rev-parse", "HEAD")
     branch = run_git("branch", "--show-current")

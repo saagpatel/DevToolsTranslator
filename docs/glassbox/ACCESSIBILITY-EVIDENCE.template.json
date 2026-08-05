@@ -1,0 +1,28 @@
+{
+  "schema_version": "glassbox-accessibility-manual/v1",
+  "ok": false,
+  "candidate_manifest_sha256": "replace-with-frozen-candidate-manifest-sha256",
+  "app_binary_sha256": "replace-with-final-app-binary-sha256",
+  "dmg_sha256": "replace-with-final-dmg-sha256",
+  "reviewer": {
+    "role": "independent_accessibility_reviewer",
+    "identity": "replace-with-reviewer-identity",
+    "reviewed_at": "replace-with-RFC3339-timestamp"
+  },
+  "checks": {
+    "full_keyboard_traversal": false,
+    "visible_focus": false,
+    "voiceover_task_flow": false,
+    "reduce_motion": false,
+    "zoom_200_percent": false,
+    "non_color_evidence_states": false,
+    "pauseable_live_updates": false,
+    "semantic_tabular_alternatives": false
+  },
+  "evidence_files": [
+    {"kind": "keyboard", "path": "keyboard-and-focus.txt", "sha256": "replace-with-sha256"},
+    {"kind": "voiceover", "path": "voiceover.txt", "sha256": "replace-with-sha256"},
+    {"kind": "zoom", "path": "zoom-and-table.txt", "sha256": "replace-with-sha256"},
+    {"kind": "reduce_motion", "path": "motion-and-live-updates.txt", "sha256": "replace-with-sha256"}
+  ]
+}

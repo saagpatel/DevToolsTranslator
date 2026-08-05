@@ -1,0 +1,57 @@
+{
+  "schema_version": "glassbox-donor-provenance/v1",
+  "donor": {
+    "name": "Pulse Orbit",
+    "repository_path": "/Users/d/Projects/Pulse Orbit",
+    "commit": "4a13a345f08f665f742f1ba9ac4f9538a5f3894d",
+    "license": "MIT",
+    "files_reviewed": [
+      "Cargo.toml",
+      "LICENSE",
+      "src-tauri/src/metrics/collector.rs",
+      "src-tauri/src/metrics/m_series.rs"
+    ]
+  },
+  "glassbox_owner": "apps/glassbox-native-bridge",
+  "implementation_files": [
+    "apps/glassbox-native-bridge/src/main.rs",
+    "apps/glassbox-macos/Sources/Glassbox/Services/ResourceSamplerController.swift",
+    "apps/glassbox-macos/Sources/Glassbox/Services/RustEvidenceService.swift",
+    "apps/glassbox-macos/Sources/Glassbox/Stores/InvestigationStore.swift",
+    "apps/glassbox-macos/Sources/Glassbox/Views/ContentView.swift"
+  ],
+  "adaptation": "Clean adaptation of bounded aggregate sampling concepts; donor files were not copied wholesale.",
+  "behavior_retained": [
+    "ordinary-permission aggregate system load sampling",
+    "ordinary-permission aggregate memory sampling",
+    "bounded periodic collection",
+    "read-only collection"
+  ],
+  "behavior_rejected": [
+    "Tauri and web dashboard runtime",
+    "alerts and notifications",
+    "history service",
+    "process enumeration and identity",
+    "process termination",
+    "network, disk, and GPU collection",
+    "unbounded polling",
+    "background persistence"
+  ],
+  "permission_classification": "ordinary_permission_visible_session",
+  "epistemic_classification": "source_declared context; no relation and Unknown conclusion",
+  "verification": [
+    "cargo test -p glassbox-native-bridge",
+    "cargo clippy -p glassbox-native-bridge --all-targets -- -D warnings",
+    "swift test --package-path apps/glassbox-macos",
+    "scripts/glassbox/run_resource_sampler_gate.sh",
+    "scripts/glassbox/run_egress_gate.sh"
+  ],
+  "negative_requirement_scan": [
+    "no process identity or arguments",
+    "no network activity",
+    "no filesystem paths",
+    "no privileged API or entitlement",
+    "no partial workspace publication on failure",
+    "no causal relation synthesized from temporal proximity"
+  ]
+}

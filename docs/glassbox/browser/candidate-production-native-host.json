@@ -1,9 +1,9 @@
 {
   "name": "com.glassbox.browser",
   "description": "Glassbox selected-tab evidence broker",
-  "path": "/Applications/Glassbox.app/Contents/Library/LoginItems/GlassboxBrowserHost",
+  "path": "/Applications/Glassbox Browser Adapter.app/Contents/Helpers/glassbox-browser-host",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://abcdefghijklmnopabcdefghijklmnop/"
+    "chrome-extension://giffhfldblangaphoeeeelcapcmedjbd/"
   ]
 }

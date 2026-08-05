@@ -12,6 +12,7 @@ glassbox-storage-sqlite = { path = "../glassbox-storage-sqlite" }
 thiserror.workspace = true
 
 [dev-dependencies]
+glassbox-evidence-bundle = { path = "../glassbox-evidence-bundle" }
 glassbox-fixtures = { path = "../glassbox-fixtures" }
 glassbox-import-worker = { path = "../../apps/glassbox-import-worker" }
 glassbox-storage-sqlite = { path = "../glassbox-storage-sqlite", features = ["test-hooks"] }

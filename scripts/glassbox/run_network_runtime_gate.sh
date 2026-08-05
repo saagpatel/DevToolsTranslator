@@ -17,7 +17,7 @@ cat >"$APP/Contents/Info.plist" <<'PLIST'
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict><key>CFBundleExecutable</key><string>GlassboxWorkflowProbe</string><key>CFBundleIdentifier</key><string>com.glassbox.workflow-probe</string><key>CFBundleName</key><string>GlassboxWorkflowProbe</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>
 PLIST
-codesign --force --timestamp --options runtime --entitlements "$ROOT/apps/glassbox-desktop/src-tauri/entitlements.plist" --sign "$IDENTITY" "$APP" >/dev/null
+codesign --force --timestamp --options runtime --entitlements "$ROOT/apps/glassbox-macos/Support/Glassbox.entitlements" --sign "$IDENTITY" "$APP" >/dev/null
 codesign --verify --deep --strict "$APP"
 
 # Calibrate the observer against a deliberate socket-producing process.
@@ -64,7 +64,10 @@ checks={
  "workflow_pid_identity_observed": workflow_pid in process_path.read_text() and "GlassboxWorkflowProbe" in process_path.read_text(),
  "workflow_phases_complete_and_ordered": phase_names == expected and all(item.get("ok") is True for item in phases) and not phase_errors,
  "workflow_os_socket_rows_absent": not workflow_sockets,
- "workflow_app_sandbox_only": entitlement_dict == {"com.apple.security.app-sandbox": True},
+ "workflow_app_sandbox_only": entitlement_dict == {
+   "com.apple.security.app-sandbox": True,
+   "com.apple.security.files.user-selected.read-only": True,
+ },
  "workflow_network_entitlements_absent": "com.apple.security.network.client" not in entitlement_dict and "com.apple.security.network.server" not in entitlement_dict,
 }
 def git(*args):

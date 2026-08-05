@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import tomllib
@@ -20,10 +21,13 @@ FORBIDDEN_BY_CLASS = {
     "glassbox_ui": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
     "glassbox_shell": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types", "reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
     "glassbox_stdio_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
+    "glassbox_browser_host": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types", "reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
     "glassbox_broker_contract": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
     "glassbox_loopback_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types", "reqwest", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
     "glassbox_passive_context_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types", "reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
+    "glassbox_process_context_broker": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types", "reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
     "glassbox_parser": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
+    "glassbox_native_bridge": {"dtt-core", "dtt-storage", "dtt-correlation", "dtt-detectors", "dtt-export", "dtt-integrity", "@dtt/shared-types"},
 }
 NETWORK_FORBIDDEN_BY_CLASS = {
     "glassbox_core": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite", "axios", "got", "node-fetch"},
@@ -32,6 +36,10 @@ NETWORK_FORBIDDEN_BY_CLASS = {
     "glassbox_stdio_broker": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
     "glassbox_shell": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
     "glassbox_test": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite", "axios", "got", "node-fetch"},
+    "glassbox_native_bridge": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
+    "glassbox_browser_host": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
+    "glassbox_browser_extension": {"axios", "got", "node-fetch"},
+    "glassbox_process_context_broker": {"reqwest", "hyper", "ureq", "curl", "tokio-tungstenite", "tungstenite"},
 }
 
 def sha256(path: Path) -> str:
@@ -105,11 +113,29 @@ def validate() -> tuple[list[str], list[dict]]:
         if forbidden:
             errors.append(f"forbidden dependencies for {path}: {', '.join(forbidden)}")
         evidence.append({"path":path,"package":name,"ecosystem":"javascript","class":component["class"],"disposition":component["disposition"],"dependencies":sorted(dependencies),"manifest_sha256":sha256(package_json)})
+    discovered_swift: set[str] = set()
+    for package_swift in ROOT.glob("**/Package.swift"):
+        if any(part in {".build", "dist", "target", ".git"} for part in package_swift.parts):
+            continue
+        path = package_swift.parent.relative_to(ROOT).as_posix()
+        discovered_swift.add(path)
+        component = components.get(path)
+        text = package_swift.read_text(encoding="utf-8")
+        name_match = re.search(r'Package\(\s*name:\s*"([^"]+)"', text)
+        if not component:
+            errors.append(f"unclassified Swift package: {path}")
+            continue
+        # The native shell intentionally has no Package.Dependency entries;
+        # system SwiftUI/AppKit imports are checked by the artifact and egress gates.
+        if ".package(" in text:
+            errors.append(f"external Swift package dependency entered native shell: {path}")
+        evidence.append({"path":path,"package":name_match.group(1) if name_match else "unnamed-package","ecosystem":"swift","class":component["class"],"disposition":component["disposition"],"dependencies":[],"manifest_sha256":sha256(package_swift)})
     declared_present = {path for path, item in components.items() if item.get("present", True) and path != "."}
     missing = sorted(
         path for path in declared_present
         if path not in discovered
         and path not in discovered_js
+        and path not in discovered_swift
         and not (ROOT / path / "package.json").is_file()
         and not (ROOT / path / "Cargo.toml").is_file()
     )

@@ -12,12 +12,14 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from candidate_manifest import load_and_validate
+
 ROOT = Path(__file__).resolve().parents[2]
 CANDIDATES = ("Codec", "Pulse Orbit", "Echolocate")
 SHA = re.compile(r"^[0-9a-f]{64}$")
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
 TOP_KEYS = {
-    "schema_version", "candidate", "as_of", "parity", "glassbox_releases", "benchmark", "soak",
+    "schema_version", "candidate", "candidate_manifest_sha256", "as_of", "parity", "glassbox_releases", "benchmark", "soak",
     "open_critical_defects", "defect_scan", "expert_workflow", "donor_final_release",
     "rollback", "archive", "approval",
 }
@@ -79,6 +81,7 @@ def validate(payload: object, source: str, base: Path) -> dict:
     errors: list[str] = []
     data = exact_keys(payload, TOP_KEYS, "root", errors)
     if data.get("schema_version") != "glassbox-retirement-evidence/v1": errors.append("unsupported schema_version")
+    if not valid_sha(data.get("candidate_manifest_sha256")): errors.append("candidate_manifest_sha256 is invalid")
     candidate = data.get("candidate")
     if candidate not in CANDIDATES: errors.append("candidate is not retirement-eligible")
     as_of = timestamp(data.get("as_of"), "as_of", errors)
@@ -170,7 +173,7 @@ def self_test() -> bool:
         proof.write_text('{"verified":true}\n', encoding="utf-8")
         ref = {"path": "proof.json", "sha256": hashlib.sha256(proof.read_bytes()).hexdigest()}
         payload = {
-            "schema_version": "glassbox-retirement-evidence/v1", "candidate": "Codec", "as_of": "2026-03-05T00:00:00Z",
+            "schema_version": "glassbox-retirement-evidence/v1", "candidate": "Codec", "candidate_manifest_sha256": "b" * 64, "as_of": "2026-03-05T00:00:00Z",
             "parity": {"workflows": [{"workflow": "device projection", "glassbox_test": "test://codec/device-projection", "passed": True}],
                        "migration_instructions": "Import the final Codec export and verify every projected device.",
                        "import_compatibility": {"passed": True, "evidence": ref}, "export_compatibility": {"passed": True, "evidence": ref}},
@@ -204,17 +207,29 @@ def main() -> int:
     parser.add_argument("--readiness", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--candidate-manifest", type=Path)
     args = parser.parse_args()
     if args.self_test:
         print(json.dumps({"fail_closed_incomplete_fixture": self_test()}))
         return 0 if self_test() else 1
     results = []
+    candidate_digest = None
+    candidate_errors = ["candidate manifest is required for retirement promotion"]
+    if args.candidate_manifest is not None:
+        _, candidate_digest, manifest_errors = load_and_validate(ROOT, args.candidate_manifest.resolve())
+        candidate_errors = [f"candidate manifest: {error}" for error in manifest_errors]
     supplied: dict[str, Path] = {}
     for path in args.artifacts:
         try: payload = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             results.append({"candidate": str(path), "source": str(path), "ready": False, "errors": [f"unreadable artifact: {exc}"]}); continue
         result = validate(payload, str(path), path.resolve().parent)
+        if candidate_errors:
+            result["errors"].extend(candidate_errors)
+            result["ready"] = False
+        elif payload.get("candidate_manifest_sha256") != candidate_digest:
+            result["errors"].append("retirement evidence targets a different candidate manifest")
+            result["ready"] = False
         if result["candidate"] in supplied: result["errors"].append("duplicate candidate artifact"); result["ready"] = False
         elif result["candidate"] in CANDIDATES: supplied[result["candidate"]] = path
         results.append(result)
@@ -229,6 +244,8 @@ def main() -> int:
         "gate7_promotable": passed, "readiness_ok": readiness_ok,
         "git_head": git("rev-parse", "HEAD"), "git_tree": git("rev-parse", "HEAD^{tree}"),
         "git_dirty": bool(git("status", "--porcelain")), "candidates": results,
+        "candidate_manifest_sha256": candidate_digest if passed else None,
+        "candidate_manifest_errors": candidate_errors if args.artifacts else [],
         "non_candidates": {"retained_expert_tools": ["Grotto", "NetworkDecoder"], "separate_manual_only": ["NetworkMapper"]},
     }
     output = json.dumps(receipt, indent=2, sort_keys=True) + "\n"

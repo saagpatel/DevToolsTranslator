@@ -6,14 +6,23 @@ members = [
   "crates/glassbox-import",
   "crates/glassbox-investigation",
   "crates/glassbox-browser-ipc",
+  "apps/glassbox-browser-host",
   "crates/glassbox-live-source",
   "apps/glassbox-otlp-broker",
   "apps/glassbox-passive-context-broker",
+  "apps/glassbox-process-context-broker",
+  "apps/glassbox-native-bridge",
   "crates/glassbox-network-import",
+  "crates/glassbox-har-import",
+  "crates/glassbox-otlp-import",
+  "crates/glassbox-evidence-bundle",
+  "crates/glassbox-apple-log-import",
   "crates/glassbox-privacy",
   "apps/glassbox-import-worker",
   "crates/glassbox-fixtures",
   "scripts/glassbox/workflow-probe",
+  "scripts/glassbox/parser-fuzz",
+  "scripts/glassbox/instrumented-source-probe",
   "apps/desktop-tauri/src-tauri",
   "crates/dtt-core",
   "crates/dtt-storage",
@@ -37,6 +46,8 @@ hmac = "0.12"
 hex = "0.4"
 url = "2"
 zeroize = "1"
+time = { version = "0.3", features = ["parsing"] }
+libc = "0.2"
 
 [workspace.metadata.devtools-translator]
 mode = "local_beta"

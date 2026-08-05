@@ -24,7 +24,7 @@ checks = {
     "addressable_evidence_on_every_page": probe.get("addressable_evidence") is True,
     "explicit_gap_markers_complete": probe.get("explicit_gap_markers") == 10,
     "zero_unmarked_drops": probe.get("unmarked_drops") == 0,
-    "bounded_ui_page_tests_and_build": True,
+    "bounded_native_ui_page_tests_and_build": True,
 }
 receipt = {
     "schema_version":"glassbox-performance/v1",
@@ -35,8 +35,8 @@ receipt = {
     "binary_sha256":hashlib.sha256(binary.read_bytes()).hexdigest(),
     "checks":checks,
     "measurements":{**probe,"maximum_resident_set_size_bytes":max_rss},
-    "measured_scope":["SQLCipher atomic batched ingest","keyset page query","JSON evidence deserialization","bounded React page contract and production build"],
-    "runtime_checks_remaining":["signed native-app end-to-end interaction p95","sustained full-workflow observer-effect study","manual VoiceOver and macOS 200% zoom"],
+    "measured_scope":["SQLCipher atomic batched ingest","keyset page query","JSON evidence deserialization","bounded SwiftUI page contract and release build"],
+    "runtime_checks_remaining":["sustained full-workflow observer-effect study","manual VoiceOver and macOS 200% zoom"],
     "errors":[name for name,value in checks.items() if not value],
 }
 receipt_path.parent.mkdir(parents=True,exist_ok=True)

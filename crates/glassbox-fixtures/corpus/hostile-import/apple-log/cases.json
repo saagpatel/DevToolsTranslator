@@ -1,0 +1,11 @@
+{
+  "schema_version": "glassbox-hostile-apple-log-corpus/v1",
+  "cases": [
+    "valid",
+    "malformed",
+    "unknown_sensitive_field",
+    "missing_end",
+    "digest_mismatch",
+    "ordinal_gap"
+  ]
+}

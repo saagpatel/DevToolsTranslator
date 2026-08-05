@@ -1,0 +1,27 @@
+{
+  "schema_version": "glassbox-provenance/v1",
+  "component": "separate selected-application process-context adapter",
+  "implementation": "clean implementation using macOS proc_pid_rusage and native SwiftUI/AppKit application selection",
+  "donor_code_copied": false,
+  "donor_process_identity_logic_used": false,
+  "retained_fields": [
+    "controller_claimed_bundle_identifier",
+    "cpu_user_time_ns",
+    "cpu_system_time_ns",
+    "resident_bytes",
+    "physical_footprint_bytes",
+    "wakeups",
+    "terminal_coverage"
+  ],
+  "excluded_fields": [
+    "pid",
+    "executable_path",
+    "arguments",
+    "username",
+    "environment",
+    "files",
+    "disk_activity",
+    "network_activity"
+  ],
+  "core_boundary": "separately distributed; never embedded in or launched by the App-Sandboxed core"
+}

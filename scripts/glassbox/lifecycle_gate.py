@@ -52,14 +52,17 @@ def install(candidate: Path, destination: Path, installed_version: str | None, *
     return True
 
 
-def build_app(root: Path, binary: Path, staging: Path, version: str, identity: str) -> Path:
+def build_app(root: Path, binary: Path, helper: Path, staging: Path, version: str, identity: str) -> Path:
     app = staging / f"Glassbox-{version}.app"
     macos = app / "Contents/MacOS"
     resources = app / "Contents/Resources"
+    helpers = app / "Contents/Helpers"
     macos.mkdir(parents=True)
     resources.mkdir()
+    helpers.mkdir()
     shutil.copy2(binary, macos / "Glassbox")
-    shutil.copy2(root / "apps/glassbox-desktop/src-tauri/PrivacyInfo.xcprivacy", resources)
+    shutil.copy2(helper, helpers / "glassbox-native-bridge")
+    shutil.copy2(root / "apps/glassbox-macos/Support/PrivacyInfo.xcprivacy", resources)
     info = {
         "CFBundleExecutable": "Glassbox", "CFBundleIdentifier": APP_ID,
         "CFBundleName": "Glassbox", "CFBundleDisplayName": "Glassbox",
@@ -68,8 +71,10 @@ def build_app(root: Path, binary: Path, staging: Path, version: str, identity: s
         "NSHighResolutionCapable": True,
     }
     (app / "Contents/Info.plist").write_bytes(plistlib.dumps(info, sort_keys=True))
+    run("codesign", "--force", "--timestamp", "--options", "runtime", "--sign", identity,
+        str(helpers / "glassbox-native-bridge"))
     run("codesign", "--force", "--timestamp", "--options", "runtime", "--entitlements",
-        str(root / "apps/glassbox-desktop/src-tauri/entitlements.plist"), "--sign", identity, str(app))
+        str(root / "apps/glassbox-macos/Support/Glassbox.entitlements"), "--sign", identity, str(app))
     run("codesign", "--verify", "--deep", "--strict", "--verbose=2", str(app))
     return app
 
@@ -116,6 +121,7 @@ def main() -> int:
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--root", type=Path)
     parser.add_argument("--binary", type=Path)
+    parser.add_argument("--helper", type=Path)
     parser.add_argument("--identity")
     parser.add_argument("--receipt", type=Path)
     args = parser.parse_args()
@@ -132,8 +138,8 @@ def main() -> int:
         result = {"downgrade_bypass_detected": bypass_detected, "residue_leak_detected": residue_detected}
         print(json.dumps(result, sort_keys=True))
         return 0 if all(result.values()) else 1
-    if None in (args.root, args.binary, args.identity, args.receipt):
-        parser.error("--root, --binary, --identity, and --receipt are required outside --self-test")
+    if None in (args.root, args.binary, args.helper, args.identity, args.receipt):
+        parser.error("--root, --binary, --helper, --identity, and --receipt are required outside --self-test")
     root = args.root.resolve()
     checks: dict[str, bool] = {}
     errors: list[str] = []
@@ -146,8 +152,8 @@ def main() -> int:
         staging = temp / "staging"
         applications.mkdir(parents=True)
         staging.mkdir()
-        v1 = build_app(root, args.binary, staging, "1.0.0", args.identity)
-        v2 = build_app(root, args.binary, staging, "2.0.0", args.identity)
+        v1 = build_app(root, args.binary, args.helper, staging, "1.0.0", args.identity)
+        v2 = build_app(root, args.binary, args.helper, staging, "2.0.0", args.identity)
 
         checks["lifecycle_artifacts_use_expected_developer_id_team"] = signed_by_expected_team(v1) and signed_by_expected_team(v2)
         checks["fresh_install"] = install(v1, installed, None)
@@ -245,6 +251,7 @@ def main() -> int:
         "git_tree": tree,
         "git_dirty": dirty,
         "binary_sha256": digest(args.binary),
+        "helper_sha256": digest(args.helper),
         "team_identifier": TEAM_ID,
         "checks": checks,
         "user_work_policy": {"exports": "enumerate_and_preserve", "browser_extension": "preserve_and_manual_remove"},

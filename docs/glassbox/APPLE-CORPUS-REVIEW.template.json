@@ -1,0 +1,14 @@
+{
+  "schema_version": "glassbox-apple-corpus-review/v1",
+  "ok": false,
+  "logarchive_sha256": "replace-with-bounded-tree-sha256",
+  "trace_sha256": "replace-with-bounded-tree-sha256",
+  "reviewer": {"identity": "replace-with-reviewer", "role": "independent_apple_corpus_reviewer", "reviewed_at": "replace-with-RFC3339-timestamp"},
+  "checks": {
+    "valid_native_container": false,
+    "non_sensitive_fixture": false,
+    "reviewed_for_distribution": false,
+    "contains_no_unrelated_user_data": false,
+    "representative_success_path": false
+  }
+}
