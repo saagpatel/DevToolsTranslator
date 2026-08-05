@@ -36,6 +36,7 @@ EXPECTED = {
     "performance": "glassbox-performance/v1",
     "egress": "glassbox-egress/v1",
     "macos_artifact": "glassbox-macos-artifact/v1",
+    "notarization": "glassbox-notarization-batch-receipt/v1",
     "benchmark": "glassbox-benchmark-readiness/v1",
     "retirement": "glassbox-retirement/v1",
 }
@@ -71,6 +72,7 @@ def promotion_summary(
         "frozen_candidate_identity": candidate_bound,
         "gate1_keychain": loaded["key_lifecycle"].get("gate1_promotable") is True,
         "gate2_apple_imports": loaded["apple_import"].get("gate2_promotable") is True,
+        "gate6_notarization_batch": loaded["notarization"].get("gate6_promotable") is True,
         "gate6_core_distribution": loaded["macos_artifact"].get("gate6_promotable") is True,
         "gate6_browser_distribution": loaded["browser_artifact"].get("gate6_promotable") is True,
         "gate6_auxiliary_adapter_distribution": loaded["auxiliary_adapters"].get("gate6_promotable") is True,
@@ -84,6 +86,7 @@ def promotion_summary(
         "frozen_candidate_identity": "one clean-tree candidate manifest must bind every promoted lane to the exact release bytes",
         "gate1_keychain": "product-authorized macOS provisioning profile and signed Keychain lifecycle round-trip",
         "gate2_apple_imports": "reviewed valid logarchive and Instruments corpora plus end-to-end conversion proof",
+        "gate6_notarization_batch": "twelve exact Accepted Apple notary logs bound to preserved upload bytes",
         "gate6_core_distribution": "fresh-VM Developer ID notarization, stapling, and Gatekeeper acceptance",
         "gate6_browser_distribution": "production extension identity, fresh-VM Chrome end-to-end evidence, notarization and stapling of the separate adapter, and manual DevTools accessibility/disclosure review",
         "gate6_auxiliary_adapter_distribution": "notarization, stapling, Gatekeeper, and fresh-VM workflow/accessibility/residue evidence for Instruments, OTLP, passive-context, and process-context adapters",
@@ -114,6 +117,7 @@ def promotion_self_test() -> dict[str, bool]:
         "gate0": {"ok": True},
         "key_lifecycle": {"gate1_promotable": True},
         "apple_import": {"gate2_promotable": True},
+        "notarization": {"gate6_promotable": True},
         "macos_artifact": {"gate6_promotable": True},
         "browser_artifact": {"gate6_promotable": True},
         "auxiliary_adapters": {"gate6_promotable": True},
@@ -130,6 +134,16 @@ def promotion_self_test() -> dict[str, bool]:
         not blocked and blocked_highest == 5 and set(blocked_reasons) == {"gate6_browser_distribution"}
     )
     loaded["browser_artifact"]["gate6_promotable"] = True
+    loaded["notarization"]["gate6_promotable"] = False
+    _, notary_blocked, notary_highest, notary_reasons = promotion_summary(
+        loaded, True, True,
+    )
+    missing_notary_stops_at_gate5 = (
+        not notary_blocked
+        and notary_highest == 5
+        and set(notary_reasons) == {"gate6_notarization_batch"}
+    )
+    loaded["notarization"]["gate6_promotable"] = True
     loaded["auxiliary_adapters"]["gate6_promotable"] = False
     _, auxiliary_blocked, auxiliary_highest, auxiliary_reasons = promotion_summary(
         loaded, True, True,
@@ -161,6 +175,7 @@ def promotion_self_test() -> dict[str, bool]:
         "all_evidence_promotes": all_evidence_promotes,
         "missing_gate6_stops_at_gate5": missing_gate6_stops_at_gate5,
         "missing_auxiliary_stops_at_gate5": missing_auxiliary_stops_at_gate5,
+        "missing_notary_stops_at_gate5": missing_notary_stops_at_gate5,
         "local_failure_never_promotes": local_failure_never_promotes,
         "missing_candidate_stops_at_gate0": missing_candidate_stops_at_gate0,
         "all_current_receipts_bind": all_current_receipts_bind,
@@ -236,6 +251,11 @@ def main() -> int:
         and loaded["macos_artifact"].get("ok")
         is loaded["macos_artifact"].get("artifact_passed")
     )
+    checks["notarization_readiness_or_promotion_state_valid"] = (
+        loaded["notarization"].get("readiness_ok") is True
+        and loaded["notarization"].get("ok")
+        is loaded["notarization"].get("gate6_promotable")
+    )
     checks["browser_artifact_readiness_or_promotion_state_valid"] = (
         loaded["browser_artifact"].get("readiness_ok") is True
         and loaded["browser_artifact"].get("artifact_passed")
@@ -289,6 +309,7 @@ def main() -> int:
     candidate_lanes = {
         "key_lifecycle": "gate1_promotable",
         "apple_import": "gate2_promotable",
+        "notarization": "gate6_promotable",
         "macos_artifact": "gate6_promotable",
         "browser_artifact": "gate6_promotable",
         "auxiliary_adapters": "gate6_promotable",

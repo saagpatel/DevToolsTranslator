@@ -16,6 +16,8 @@ if [[ -n "${GLASSBOX_CANDIDATE_MANIFEST:-}" ]]; then
     GLASSBOX_APPLE_TRACE_CORPUS
     GLASSBOX_APPLE_CORPUS_REVIEW_CMS
     GLASSBOX_APPLE_CORPUS_REVIEWER_CA
+    GLASSBOX_NOTARIZATION_BATCH_MANIFEST
+    GLASSBOX_NOTARIZATION_LOGS_DIR
     GLASSBOX_ACCESSIBILITY_REVIEW_CMS
     GLASSBOX_ACCESSIBILITY_REVIEWER_CA
     GLASSBOX_BROWSER_FRESH_VM_CMS
@@ -47,6 +49,12 @@ if [[ -n "${GLASSBOX_CANDIDATE_MANIFEST:-}" ]]; then
   python3 "$ROOT/scripts/glassbox/check_gate0.py" >"$RECEIPTS/gate0.json"
   "$ROOT/scripts/glassbox/run_key_lifecycle_readiness.sh" "$RECEIPTS/key_lifecycle.json" >/dev/null
   "$ROOT/scripts/glassbox/run_apple_import_readiness_gate.sh" "$RECEIPTS/apple_import.json" >/dev/null
+  python3 "$ROOT/scripts/glassbox/notarization_batch.py" \
+    --root "$ROOT" \
+    --verify-accepted "$GLASSBOX_NOTARIZATION_BATCH_MANIFEST" \
+    --logs-dir "$GLASSBOX_NOTARIZATION_LOGS_DIR" \
+    --candidate-manifest "$GLASSBOX_CANDIDATE_MANIFEST" \
+    --receipt "$RECEIPTS/notarization.json" >/dev/null
   "$ROOT/scripts/glassbox/run_macos_artifact_readiness.sh" "$RECEIPTS/macos_artifact.json" >/dev/null
   "$ROOT/scripts/glassbox/run_browser_artifact_readiness.sh" "$RECEIPTS/browser_artifact.json" >/dev/null
   "$ROOT/scripts/glassbox/run_auxiliary_adapter_artifact_readiness.sh" "$RECEIPTS/auxiliary_adapters.json" >/dev/null
@@ -90,6 +98,8 @@ python3 "$ROOT/scripts/glassbox/check_boundaries.py" >"$RECEIPTS/boundary.json"
 "$ROOT/scripts/glassbox/run_accessibility_gate.sh" >"$RECEIPTS/accessibility.json"
 "$ROOT/scripts/glassbox/run_performance_gate.sh" "$RECEIPTS/performance.json" >/dev/null
 "$ROOT/scripts/glassbox/run_egress_gate.sh" >"$RECEIPTS/egress.json"
+python3 "$ROOT/scripts/glassbox/notarization_batch.py" \
+  --root "$ROOT" --readiness "$RECEIPTS/notarization.json" >/dev/null
 "$ROOT/scripts/glassbox/run_macos_artifact_readiness.sh" "$RECEIPTS/macos_artifact.json" >/dev/null
 "$ROOT/scripts/glassbox/run_benchmark_readiness_gate.sh" "$RECEIPTS/benchmark.json" >/dev/null
 RETIREMENT_ARGS=()

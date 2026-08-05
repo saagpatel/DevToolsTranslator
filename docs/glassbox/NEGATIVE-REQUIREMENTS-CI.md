@@ -21,7 +21,7 @@ Release and merge verification must inspect source, dependency graph, generated 
 
 ## Platform artifact proof
 
-Do not infer signing or notarization from a SHA or configuration flag. Before Gate 6 promotion, `scripts/glassbox/verify_macos_artifact.sh`, `scripts/glassbox/verify_browser_artifact.sh`, and `scripts/glassbox/verify_auxiliary_adapters.py` must bind versioned receipts to every final core and separately distributed adapter `.app`, helper, DMG, and extension ZIP hash and parse failures from:
+Do not infer signing or notarization from a SHA or configuration flag. Before Gate 6 promotion, `scripts/glassbox/verify_macos_artifact.sh`, `scripts/glassbox/verify_browser_artifact.sh`, `scripts/glassbox/verify_auxiliary_adapters.py`, and `scripts/glassbox/notarization_batch.py` must bind versioned receipts to every final core and separately distributed adapter `.app`, helper, DMG, extension ZIP, preserved notary upload, and all twelve Apple Accepted logs and parse failures from:
 
 - `codesign --verify --strict --deep`
 - `codesign -d --entitlements :-`
