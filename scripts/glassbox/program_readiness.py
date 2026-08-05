@@ -50,6 +50,19 @@ def git(root: Path, *args: str) -> str:
     return result.stdout.strip() if result.returncode == 0 else "unknown"
 
 
+def receipt_binding_checks(
+    loaded: dict[str, dict[str, object]], head: str, tree: str,
+) -> dict[str, bool]:
+    return {
+        f"{name}_current_clean_git_binding": (
+            data.get("git_head") == head
+            and data.get("git_tree") == tree
+            and data.get("git_dirty") is False
+        )
+        for name, data in loaded.items()
+    }
+
+
 def promotion_summary(
     loaded: dict[str, dict[str, object]], implemented: bool, candidate_bound: bool,
 ) -> tuple[dict[str, bool], bool, int | None, dict[str, str]]:
@@ -133,12 +146,25 @@ def promotion_self_test() -> dict[str, bool]:
         not unbound and unbound_highest == 0
         and "frozen_candidate_identity" in unbound_reasons
     )
+    binding_loaded = {
+        name: {"git_head": "head", "git_tree": "tree", "git_dirty": False}
+        for name in EXPECTED
+    }
+    all_current_receipts_bind = all(
+        receipt_binding_checks(binding_loaded, "head", "tree").values()
+    )
+    binding_loaded["benchmark"]["git_head"] = "stale"
+    stale_receipt_rejected = not receipt_binding_checks(
+        binding_loaded, "head", "tree",
+    )["benchmark_current_clean_git_binding"]
     return {
         "all_evidence_promotes": all_evidence_promotes,
         "missing_gate6_stops_at_gate5": missing_gate6_stops_at_gate5,
         "missing_auxiliary_stops_at_gate5": missing_auxiliary_stops_at_gate5,
         "local_failure_never_promotes": local_failure_never_promotes,
         "missing_candidate_stops_at_gate0": missing_candidate_stops_at_gate0,
+        "all_current_receipts_bind": all_current_receipts_bind,
+        "stale_receipt_rejected": stale_receipt_rejected,
     }
 
 
@@ -177,6 +203,10 @@ def main() -> int:
         checks[f"{name}_receipt_schema"] = data.get("schema_version") == schema
         if path.is_file():
             refs[name] = {"path": str(path), "sha256": sha256(path)}
+
+    current_head = git(root, "rev-parse", "HEAD")
+    current_tree = git(root, "rev-parse", "HEAD^{tree}")
+    checks.update(receipt_binding_checks(loaded, current_head, current_tree))
 
     ordinary_ok = [
         "boundary", "storage", "lifecycle", "hostile_import", "privacy",
@@ -281,8 +311,8 @@ def main() -> int:
         "implemented_lane_checks_ok": implemented_lane_checks_ok,
         "program_promotable": program_promotable,
         "highest_promotable_gate": highest_promotable_gate,
-        "git_head": git(root, "rev-parse", "HEAD"),
-        "git_tree": git(root, "rev-parse", "HEAD^{tree}"),
+        "git_head": current_head,
+        "git_tree": current_tree,
         "git_dirty": bool(git(root, "status", "--porcelain")),
         "candidate_manifest_sha256": candidate_digest,
         "candidate_manifest_errors": candidate_errors,

@@ -415,6 +415,7 @@ def main() -> int:
         "workflow_receipt_sha256": digest(args.workflow_receipt),
         "core_executables": executables(core),
         "git_head": text_run("git", "-C", str(root), "rev-parse", "HEAD").strip(),
+        "git_tree": text_run("git", "-C", str(root), "rev-parse", "HEAD^{tree}").strip(),
         "git_dirty": bool(text_run("git", "-C", str(root), "status", "--porcelain").strip()),
         "external_requirements": [
             "repeat visible selection, capture, explicit stop, export, core import, update, downgrade, and uninstall on a fresh macOS VM",

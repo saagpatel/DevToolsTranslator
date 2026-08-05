@@ -142,6 +142,7 @@ result = {
     "generated_at": datetime.now(timezone.utc).isoformat(),
     "git_head": git("-C", str(root), "rev-parse", "HEAD"),
     "git_tree": git("-C", str(root), "rev-parse", "HEAD^{tree}"),
+    "git_dirty": bool(git("-C", str(root), "status", "--porcelain")),
     "checks": checks,
     "limits": {"interval_ms": [100, 5000], "maximum_samples": [1, 600], "maximum_configured_duration_ms": 30000, "native_default_ms": 500, "native_default_samples": 60},
     "fields": ["load_1m_milli", "load_5m_milli", "load_15m_milli", "memory_used_estimate_bytes", "memory_total_bytes", "memory_pressure"],

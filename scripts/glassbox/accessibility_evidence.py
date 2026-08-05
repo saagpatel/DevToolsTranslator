@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,6 +36,13 @@ ROOT_KEYS = {
 
 
 ATTACHMENT_KINDS = {"keyboard", "voiceover", "zoom", "reduce_motion"}
+
+
+def git(root: Path, *args: str) -> str:
+    result = subprocess.run(
+        ["git", *args], cwd=root, text=True, capture_output=True,
+    )
+    return result.stdout.strip() if result.returncode == 0 else "unknown"
 
 
 def validate(
@@ -153,10 +161,14 @@ def main() -> int:
                 authenticated=not cms_errors, candidate_digest=candidate_digest or "",
             ))
     manual_passed = supplied and not errors
+    source_root = args.root.resolve() if args.root is not None else Path(__file__).resolve().parents[2]
     result = {
         "schema_version": "glassbox-accessibility/v1",
         "ok": not errors,
         "readiness_ok": True,
+        "git_head": git(source_root, "rev-parse", "HEAD"),
+        "git_tree": git(source_root, "rev-parse", "HEAD^{tree}"),
+        "git_dirty": bool(git(source_root, "status", "--porcelain")),
         "manual_accessibility_passed": manual_passed,
         "gate6_promotable": manual_passed,
         "automated_scope": [
