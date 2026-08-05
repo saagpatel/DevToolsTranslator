@@ -8,6 +8,15 @@
     "role": "independent_benchmark_verifier",
     "verified_at": "replace-with-RFC3339-timestamp"
   },
+  "evidence_files": [
+    {"kind": "participant_registry", "path": "replace-with-relative-path", "sha256": "replace-with-sha256"},
+    {"kind": "study_records", "path": "replace-with-relative-path", "sha256": "replace-with-sha256"},
+    {"kind": "scoring_export", "path": "replace-with-relative-path", "sha256": "replace-with-sha256"},
+    {"kind": "adjudication_log", "path": "replace-with-relative-path", "sha256": "replace-with-sha256"},
+    {"kind": "preregistration_record", "path": "replace-with-relative-path", "sha256": "replace-with-sha256"},
+    {"kind": "held_out_corpus_manifest", "path": "replace-with-relative-path", "sha256": "replace-with-sha256"},
+    {"kind": "metric_recomputation", "path": "replace-with-relative-path", "sha256": "replace-with-sha256"}
+  ],
   "checks": {
     "participant_registry_verified": false,
     "study_records_verified": false,

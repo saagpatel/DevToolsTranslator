@@ -7,5 +7,5 @@
   "power_analysis": {"computed_from_pilot": null, "formal_sample_size": null, "method": null, "primary_outcome": null},
   "preregistration": {"registered_at": null, "formal_data_collection_started_at": null, "public_record": null, "primary_outcome": null, "statistical_test": null, "exclusions": [], "stopping_rule": null},
   "formal_study": {"human_participants": null, "agents_as_participants": false, "participant_count": null, "randomized": null, "counterbalanced": null, "independent_scoring": null, "blinded_adjudication": null, "metrics": {"addressable_evidence_citation_rate": null, "unsupported_causal_claim_rate": null, "seeded_secret_leaks": null, "visible_limitation_rate": null, "time_to_supported_conclusion_improved": null, "primary_p_value": null}},
-  "integrity": {"participant_registry_sha256": null, "scoring_export_sha256": null, "adjudication_log_sha256": null}
+  "integrity": {"participant_registry_sha256": null, "study_records_sha256": null, "scoring_export_sha256": null, "adjudication_log_sha256": null, "preregistration_record_sha256": null, "metric_recomputation_sha256": null}
 }

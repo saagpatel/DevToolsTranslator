@@ -9,10 +9,11 @@ import json
 import re
 import subprocess
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from candidate_manifest import load_and_validate
+from external_evidence import sha256, verify_cms_json
 
 ROOT = Path(__file__).resolve().parents[2]
 CANDIDATES = ("Codec", "Pulse Orbit", "Echolocate")
@@ -37,7 +38,10 @@ def timestamp(value: object, field: str, errors: list[str]) -> datetime | None:
     if parsed.tzinfo is None:
         errors.append(f"{field} must include a timezone")
         return None
-    return parsed.astimezone(timezone.utc)
+    parsed = parsed.astimezone(timezone.utc)
+    if parsed > datetime.now(timezone.utc) + timedelta(minutes=5):
+        errors.append(f"{field} is in the future")
+    return parsed
 
 
 def exact_keys(value: object, keys: set[str], field: str, errors: list[str]) -> dict:
@@ -198,7 +202,38 @@ def self_test() -> bool:
         payload["soak"]["ended_at"] = "2026-03-03T00:00:00Z"
         payload["parity"]["import_compatibility"]["evidence"] = {"path": "../escape", "sha256": "0" * 64}
         escaped_evidence_rejected = any("escapes its evidence directory" in error for error in validate(payload, "escape", base)["errors"])
-        return valid and approval_rejected and short_soak_rejected and escaped_evidence_rejected
+        payload_path = base / "retirement.json"
+        payload_path.write_text(json.dumps(payload), encoding="utf-8")
+        key = base / "authority-key.pem"
+        cert = base / "authority-ca.pem"
+        cms = base / "retirement.cms"
+        commands = [
+            [
+                "/usr/bin/openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
+                "-keyout", str(key), "-out", str(cert), "-days", "1",
+                "-subj", "/CN=Glassbox Retirement Authority Test",
+            ],
+            [
+                "/usr/bin/openssl", "cms", "-sign", "-binary", "-in", str(payload_path),
+                "-signer", str(cert), "-inkey", str(key), "-outform", "DER",
+                "-out", str(cms), "-nosmimecap", "-nodetach",
+            ],
+        ]
+        signed = not any(
+            subprocess.run(command, capture_output=True).returncode for command in commands
+        )
+        decoded, cms_errors = verify_cms_json(cms, cert)
+        signed_payload_verified = signed and decoded == payload and not cms_errors
+        raw_json_rejected_by_cms = bool(verify_cms_json(payload_path, cert)[1])
+        future_payload = json.loads(json.dumps(payload))
+        future_payload["as_of"] = "2099-01-01T00:00:00Z"
+        future_rejected = "as_of is in the future" in validate(
+            future_payload, "future", base,
+        )["errors"]
+        return all([
+            valid, approval_rejected, short_soak_rejected, escaped_evidence_rejected,
+            signed_payload_verified, raw_json_rejected_by_cms, future_rejected,
+        ])
 
 
 def main() -> int:
@@ -208,6 +243,7 @@ def main() -> int:
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--receipt", type=Path)
     parser.add_argument("--candidate-manifest", type=Path)
+    parser.add_argument("--authority-ca", type=Path)
     args = parser.parse_args()
     if args.self_test:
         print(json.dumps({"fail_closed_incomplete_fixture": self_test()}))
@@ -218,12 +254,25 @@ def main() -> int:
     if args.candidate_manifest is not None:
         _, candidate_digest, manifest_errors = load_and_validate(ROOT, args.candidate_manifest.resolve())
         candidate_errors = [f"candidate manifest: {error}" for error in manifest_errors]
+    authority_ca_errors: list[str] = []
+    if args.artifacts and args.authority_ca is None:
+        authority_ca_errors.append("product-authority CA is required for retirement promotion")
     supplied: dict[str, Path] = {}
     for path in args.artifacts:
-        try: payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            results.append({"candidate": str(path), "source": str(path), "ready": False, "errors": [f"unreadable artifact: {exc}"]}); continue
+        if args.authority_ca is None:
+            payload, cms_errors = {}, list(authority_ca_errors)
+        else:
+            payload, cms_errors = verify_cms_json(path.resolve(), args.authority_ca.resolve())
+            cms_errors = [f"product-authority CMS: {error}" for error in cms_errors]
+        if cms_errors:
+            results.append({
+                "candidate": str(path), "source": str(path), "ready": False,
+                "evidence_cms_sha256": sha256(path) if path.is_file() else None,
+                "errors": cms_errors,
+            })
+            continue
         result = validate(payload, str(path), path.resolve().parent)
+        result["evidence_cms_sha256"] = sha256(path)
         if candidate_errors:
             result["errors"].extend(candidate_errors)
             result["ready"] = False
@@ -246,6 +295,9 @@ def main() -> int:
         "git_dirty": bool(git("status", "--porcelain")), "candidates": results,
         "candidate_manifest_sha256": candidate_digest if passed else None,
         "candidate_manifest_errors": candidate_errors if args.artifacts else [],
+        "authority_ca_sha256": sha256(args.authority_ca)
+        if args.artifacts and args.authority_ca and args.authority_ca.is_file()
+        else None,
         "non_candidates": {"retained_expert_tools": ["Grotto", "NetworkDecoder"], "separate_manual_only": ["NetworkMapper"]},
     }
     output = json.dumps(receipt, indent=2, sort_keys=True) + "\n"

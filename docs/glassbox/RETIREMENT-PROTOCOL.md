@@ -3,6 +3,8 @@
 Status: accepted for Gate 0 review
 Owner: product authority and release owner
 
+Every candidate retirement record must be signed as attached DER CMS by the product authority and chain to the explicitly supplied retirement-authority CA. Unsigned JSON, a self-declared signer field, or hash-matched files without that authenticated envelope cannot promote Gate 7. Future-dated release, soak, defect, or approval timestamps fail closed.
+
 Copying code does not retire a product. Grotto and NetworkDecoder remain expert tools. NetworkMapper remains separate/manual-only. Codec, Pulse Orbit, and Echolocate are candidates only after the requirements below pass.
 
 ## Required evidence per retirement candidate
@@ -20,6 +22,17 @@ Copying code does not retire a product. Grotto and NetworkDecoder remain expert 
 ## Archive posture
 
 Never delete donor history. Preserve tags, releases, source, issues/decisions needed for provenance, and a final README naming Glassbox or the retained expert tool. Archive read-only only after remote state and rollback artifacts are verified.
+
+Strict verification requires all three candidate CMS records together:
+
+```sh
+GLASSBOX_CANDIDATE_MANIFEST=/absolute/path/to/glassbox-candidate-manifest.json \
+GLASSBOX_RETIREMENT_AUTHORITY_CA=/absolute/path/to/product-authority-ca.pem \
+GLASSBOX_CODEC_RETIREMENT_EVIDENCE=/absolute/path/to/codec-retirement.cms \
+GLASSBOX_PULSE_RETIREMENT_EVIDENCE=/absolute/path/to/pulse-orbit-retirement.cms \
+GLASSBOX_ECHOLOCATE_RETIREMENT_EVIDENCE=/absolute/path/to/echolocate-retirement.cms \
+  scripts/glassbox/run_program_readiness.sh
+```
 
 ## Rollback
 
