@@ -33,11 +33,7 @@ final class InvestigationStore: ObservableObject {
     }
     do {
       let loaded: NativeShellPayload
-      if CommandLine.arguments.contains("--glassbox-resource-sampler-probe") {
-        loaded = try service.loadResourceSample(
-          stopInput: FileHandle.standardInput,
-          captureSession: UUID(), intervalMilliseconds: 100, maximumSamples: 2)
-      } else if CommandLine.arguments.contains("--glassbox-import-probe") {
+      if CommandLine.arguments.contains("--glassbox-import-probe") {
         let environment = ProcessInfo.processInfo.environment
         guard let rawFormat = environment["GLASSBOX_IMPORT_FORMAT"],
           let format = EvidenceImportFormat(rawValue: rawFormat),
@@ -210,12 +206,49 @@ final class InvestigationStore: ObservableObject {
     guard
       let flagIndex = CommandLine.arguments.firstIndex(of: "--glassbox-interaction-probe"),
       CommandLine.arguments.indices.contains(flagIndex + 1),
-      !interactionProbeStarted,
-      payload != nil
+      !interactionProbeStarted
     else { return }
     let probeID = CommandLine.arguments[flagIndex + 1]
     guard !probeID.isEmpty, !probeID.hasPrefix("--") else { return }
     interactionProbeStarted = true
+    for _ in 0..<100 where NSApp.windows.isEmpty {
+      try? await Task.sleep(for: .milliseconds(10))
+    }
+    if CommandLine.arguments.contains("--glassbox-resource-sampler-probe") {
+      isSamplingResources = true
+      resourceSamplerStatus = "Sampling system resources (probe)…"
+      importErrorMessage = nil
+      do {
+        let service = try RustEvidenceService()
+        let controller = resourceSampler
+        controller.arm()
+        let loaded = try await Task.detached(priority: .userInitiated) {
+          try controller.sample(
+            service: service, captureSession: UUID(),
+            intervalMilliseconds: 100, maximumSamples: 2)
+        }.value
+        finishResourceSampler(with: .success(loaded))
+      } catch let error as NativeShellError {
+        finishResourceSampler(with: .failure(error))
+      } catch {
+        finishResourceSampler(with: .failure(.helperFailed("sampling failed")))
+      }
+      guard
+        importErrorMessage == nil,
+        payload?.view.scenarioId == "resource-sampler-session"
+      else {
+        var result = NativeInteractionProbeResult()
+        result.errors.append("resource sampler probe failed")
+        NSApp.windows.first?.title = "Glassbox probe result \(probeID) \(result.base64URL())"
+        return
+      }
+    }
+    guard payload != nil else {
+      var result = NativeInteractionProbeResult()
+      result.errors.append("probe evidence unavailable")
+      NSApp.windows.first?.title = "Glassbox probe result \(probeID) \(result.base64URL())"
+      return
+    }
     let result = await NativeInteractionProbe.run(store: self)
     NSApp.windows.first?.title = "Glassbox probe result \(probeID) \(result.base64URL())"
   }
