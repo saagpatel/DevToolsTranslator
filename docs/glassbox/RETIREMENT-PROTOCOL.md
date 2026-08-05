@@ -3,7 +3,7 @@
 Status: accepted for Gate 0 review
 Owner: product authority and release owner
 
-Every candidate retirement record must be signed as attached DER CMS by the product authority and chain to the explicitly supplied retirement-authority CA. Unsigned JSON, a self-declared signer field, or hash-matched files without that authenticated envelope cannot promote Gate 7. Future-dated release, soak, defect, or approval timestamps fail closed.
+Every candidate retirement record must be signed as attached DER CMS by the product authority and chain to the explicitly supplied retirement-authority CA. Unsigned JSON, a self-declared signer field, or hash-matched files without that authenticated envelope cannot promote Gate 7. Evidence paths must be relative, traversal-free, and free of symlink components. The two qualifying releases must use distinct semantic versions, release timestamps, and artifact evidence. Future-dated release, soak, defect, or approval timestamps fail closed, and the final `as_of` timestamp must not precede soak completion, the last defect scan, or approval.
 
 Copying code does not retire a product. Grotto and NetworkDecoder remain expert tools. NetworkMapper remains separate/manual-only. Codec, Pulse Orbit, and Echolocate are candidates only after the requirements below pass.
 
