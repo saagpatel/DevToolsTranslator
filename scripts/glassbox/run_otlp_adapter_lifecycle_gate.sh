@@ -30,7 +30,7 @@ GLASSBOX_OTLP_BROKER_PATH="$ROOT/dist/Glassbox OTLP Adapter.app/Contents/Helpers
 GLASSBOX_REFERENCE_SOURCE_PATH="$SOURCE_APP/Contents/MacOS/glassbox-instrumented-source-probe" \
 GLASSBOX_NATIVE_BRIDGE_PATH="$ROOT/dist/Glassbox.app/Contents/Helpers/glassbox-native-bridge" \
 GLASSBOX_REFERENCE_WORKFLOW_RECEIPT="$SOURCE_WORKFLOW_RECEIPT" \
-  swift test --package-path "$ROOT/apps/glassbox-otlp-adapter-macos" >/dev/null
+  swift test --package-path "$ROOT/apps/glassbox-otlp-adapter-macos" >&2
 test -s "$SOURCE_WORKFLOW_RECEIPT"
 python3 "$ROOT/scripts/glassbox/otlp_adapter_lifecycle_gate.py" \
   --root "$ROOT" \
