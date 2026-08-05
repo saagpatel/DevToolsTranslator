@@ -41,13 +41,23 @@ export GLASSBOX_PRIVACY_AUDIT_RECEIPT="$PRIVACY_RECEIPT"
 
 INTERACTION_RESULT="$TEMP/native-interaction.b64"
 INTERACTION_RECEIPT="$TEMP/native-interaction.json"
+INTERACTION_PROBE_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
 python3 "$ROOT/scripts/glassbox/native_interaction_gate.py" --self-test >/dev/null
-/usr/bin/open -n "$APP" --args --glassbox-interaction-probe
+pkill -x Glassbox >/dev/null 2>&1 || true
+for _ in {1..50}; do
+  if ! pgrep -x Glassbox >/dev/null; then break; fi
+  sleep 0.1
+done
+if pgrep -x Glassbox >/dev/null; then
+  echo "A prior Glassbox process did not terminate before the interaction probe" >&2
+  exit 1
+fi
+/usr/bin/open -n "$APP" --args --glassbox-interaction-probe "$INTERACTION_PROBE_ID"
 INTERACTION_PAYLOAD=""
 for _ in {1..600}; do
   WINDOW_TITLE="$(osascript -e 'tell application "System Events" to if exists process "Glassbox" then tell process "Glassbox" to if exists first window then return name of first window as text' 2>/dev/null || true)"
-  if [[ "$WINDOW_TITLE" == "Glassbox probe result "* ]]; then
-    INTERACTION_PAYLOAD="${WINDOW_TITLE#Glassbox probe result }"
+  if [[ "$WINDOW_TITLE" == "Glassbox probe result $INTERACTION_PROBE_ID "* ]]; then
+    INTERACTION_PAYLOAD="${WINDOW_TITLE#Glassbox probe result $INTERACTION_PROBE_ID }"
     break
   fi
   sleep 0.1

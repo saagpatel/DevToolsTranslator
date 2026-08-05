@@ -207,11 +207,16 @@ final class InvestigationStore: ObservableObject {
   }
 
   func runInteractionProbeIfRequested() async {
-    guard CommandLine.arguments.contains("--glassbox-interaction-probe"), !interactionProbeStarted,
+    guard
+      let flagIndex = CommandLine.arguments.firstIndex(of: "--glassbox-interaction-probe"),
+      CommandLine.arguments.indices.contains(flagIndex + 1),
+      !interactionProbeStarted,
       payload != nil
     else { return }
+    let probeID = CommandLine.arguments[flagIndex + 1]
+    guard !probeID.isEmpty, !probeID.hasPrefix("--") else { return }
     interactionProbeStarted = true
     let result = await NativeInteractionProbe.run(store: self)
-    NSApp.windows.first?.title = "Glassbox probe result \(result.base64URL())"
+    NSApp.windows.first?.title = "Glassbox probe result \(probeID) \(result.base64URL())"
   }
 }
