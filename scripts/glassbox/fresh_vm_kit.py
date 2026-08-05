@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import stat
 import tempfile
 import zipfile
@@ -130,6 +131,20 @@ def zip_info(name: str) -> zipfile.ZipInfo:
     return info
 
 
+def publish_exclusive(source: Path, output: Path) -> None:
+    if output.exists() or output.is_symlink():
+        raise ValueError("output_exists")
+    try:
+        os.link(source, output)
+    except FileExistsError as exc:
+        raise ValueError("output_exists") from exc
+    directory_fd = os.open(output.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+
+
 def write_archive(
     output: Path,
     root_name: str,
@@ -137,8 +152,8 @@ def write_archive(
     kit_manifest: dict[str, object],
 ) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
-    if output.is_symlink():
-        raise ValueError("output_is_symlink")
+    if output.exists() or output.is_symlink():
+        raise ValueError("output_exists")
     with tempfile.NamedTemporaryFile(
         prefix=f".{output.name}.", dir=output.parent, delete=False
     ) as handle:
@@ -153,7 +168,9 @@ def write_archive(
                 zip_info(f"{root_name}/{KIT_MANIFEST}"),
                 canonical_json(kit_manifest),
             )
-        temporary.replace(output)
+        with temporary.open("rb") as handle:
+            os.fsync(handle.fileno())
+        publish_exclusive(temporary, output)
     finally:
         temporary.unlink(missing_ok=True)
 
@@ -219,8 +236,8 @@ def build(root: Path, candidate_path: Path, output: Path) -> dict[str, object]:
         "members": member_records,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
-    if output.is_symlink():
-        return {"schema_version": SCHEMA, "ok": False, "errors": ["output_is_symlink"]}
+    if output.exists() or output.is_symlink():
+        return {"schema_version": SCHEMA, "ok": False, "errors": ["output_exists"]}
     with tempfile.NamedTemporaryFile(
         prefix=f".{output.name}.verify.", dir=output.parent, delete=False
     ) as handle:
@@ -231,7 +248,14 @@ def build(root: Path, candidate_path: Path, output: Path) -> dict[str, object]:
         result = verify_archive(staging, expected_candidate_sha256=candidate_digest)
         if result["ok"] is not True:
             return result
-        staging.replace(output)
+        try:
+            publish_exclusive(staging, output)
+        except (OSError, ValueError) as exc:
+            return {
+                "schema_version": SCHEMA,
+                "ok": False,
+                "errors": [str(exc)],
+            }
     finally:
         staging.unlink(missing_ok=True)
     result["archive"] = str(output.resolve())
@@ -564,6 +588,14 @@ def self_test() -> dict[str, bool]:
             is True
         )
         deterministic = first.read_bytes() == second.read_bytes()
+        original_first = first.read_bytes()
+        try:
+            write_archive(first, root_name, members, kit_manifest)
+            overwrite_rejected = False
+        except ValueError as exc:
+            overwrite_rejected = (
+                str(exc) == "output_exists" and first.read_bytes() == original_first
+            )
         wrong_digest_rejected = (
             verify_archive(first, expected_candidate_sha256="0" * 64)["ok"] is False
         )
@@ -613,6 +645,7 @@ def self_test() -> dict[str, bool]:
             "valid_archive_passes": valid,
             "valid_extracted_directory_passes": valid_directory,
             "deterministic_archive_bytes": deterministic,
+            "existing_archive_preserved": overwrite_rejected,
             "wrong_expected_candidate_rejected": wrong_digest_rejected,
             "tampered_member_rejected": tamper_rejected,
             "tampered_directory_rejected": tampered_directory_rejected,

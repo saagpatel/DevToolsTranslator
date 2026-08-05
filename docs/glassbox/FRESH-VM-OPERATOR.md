@@ -37,3 +37,5 @@ Every evidence document must bind the candidate-manifest digest and the exact ar
 Return the CMS envelopes, reviewer CA certificates, completed source evidence documents, and their confined redacted attachments. Do not place secrets, Apple credentials, signing keys, private browsing data, or unrelated user files in the package.
 
 The release owner must run the repository's strict candidate-bound verifiers. Passing this kit verifier proves transfer integrity only; it does not prove accessibility, lifecycle, browser, adapter, or release promotion by itself.
+
+Kit production is create-only. Always choose a new output path; the builder refuses to overwrite or follow an existing file or symlink, and publishes the verified archive atomically only after its bytes and candidate binding pass local verification.

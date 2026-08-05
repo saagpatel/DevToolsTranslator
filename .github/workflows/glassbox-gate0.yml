@@ -22,6 +22,7 @@ jobs:
         run: |
           python3 scripts/glassbox/candidate_manifest.py --self-test
           python3 scripts/glassbox/notarization_batch.py --self-test
+          python3 scripts/glassbox/fresh_vm_kit.py --self-test
           python3 scripts/glassbox/program_readiness.py --self-test
       - name: Validate Gate 0 contract and Glassbox source boundary
         run: python3 scripts/glassbox/check_gate0.py --receipt artifacts/gate0.json
