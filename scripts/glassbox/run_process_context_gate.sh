@@ -9,6 +9,7 @@ if [[ -z "$IDENTITY" ]]; then
   exit 2
 fi
 export GLASSBOX_CODESIGN_IDENTITY="$IDENTITY"
+python3 "$ROOT/scripts/glassbox/test_process_context_gate.py"
 "$ROOT/script/build_and_run.sh" --stage-only
 "$ROOT/script/build_process_context_adapter.sh" --stage-only
 HELPER="$ROOT/dist/Glassbox Process Context.app/Contents/Helpers/glassbox-process-context-broker"

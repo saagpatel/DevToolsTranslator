@@ -109,12 +109,18 @@ def broker_capture(
     os.close(evidence_fd)
     os.close(consent_read)
     assert process.stdin is not None
-    process.stdin.write((json.dumps(config, separators=(",", ":")) + "\n").encode())
-    if control is not None:
-        process.stdin.write(control)
-        process.stdin.close()
-    else:
-        process.stdin.flush()
+    try:
+        process.stdin.write((json.dumps(config, separators=(",", ":")) + "\n").encode())
+        if control is not None:
+            process.stdin.write(control)
+            process.stdin.close()
+        else:
+            process.stdin.flush()
+    except BrokenPipeError:
+        # Negative controls may reject consent or configuration and close stdin
+        # before the parent flushes. Their exit code and bounded output are the
+        # oracle; an expected early close must not crash the harness first.
+        pass
     try:
         code = process.wait(timeout=8)
     except subprocess.TimeoutExpired:
@@ -122,7 +128,10 @@ def broker_capture(
         process.wait()
         raise RuntimeError("process broker did not terminate")
     if process.stdin is not None and not process.stdin.closed:
-        process.stdin.close()
+        try:
+            process.stdin.close()
+        except BrokenPipeError:
+            pass
     assert process.stdout is not None and process.stderr is not None
     stdout = process.stdout.read()
     stderr = process.stderr.read()
