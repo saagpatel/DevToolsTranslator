@@ -24,6 +24,7 @@ python3 "$ROOT/scripts/glassbox/check_boundaries.py" >"$RECEIPTS/boundary.json"
 "$ROOT/scripts/glassbox/run_mystery_acceptance.sh" "$RECEIPTS/mysteries.json" >/dev/null
 "$ROOT/scripts/glassbox/run_browser_ipc_gate.sh" >"$RECEIPTS/browser_ipc.json"
 "$ROOT/scripts/glassbox/run_browser_artifact_readiness.sh" "$RECEIPTS/browser_artifact.json" >/dev/null
+"$ROOT/scripts/glassbox/run_auxiliary_adapter_artifact_readiness.sh" "$RECEIPTS/auxiliary_adapters.json" >/dev/null
 "$ROOT/scripts/glassbox/run_live_source_gate.sh" >"$RECEIPTS/live_source.json"
 "$ROOT/scripts/glassbox/run_resource_sampler_gate.sh" "$RECEIPTS/resource_sampler.json" >/dev/null
 "$ROOT/scripts/glassbox/run_process_context_gate.sh" "$RECEIPTS/process_context.json" >/dev/null

@@ -25,6 +25,7 @@ REQUIRED_FILES = [
     "GATE-ORACLE-REGISTRY.md", "BENCHMARK-PROTOCOL.md", "RETIREMENT-PROTOCOL.md",
     "GATE-0-DECISION-REGISTER.md", "GATE-0-IMPLEMENTATION-PLAN.md",
     "GATE-0-REVIEW.md", "COMPONENT-MANIFEST.json",
+    "AUXILIARY-ADAPTER-RELEASE-EVIDENCE.md",
     *[f"adrs/{i:03d}-{name}.md" for i, name in [
         (1,"kernel-boundary"),(2,"evidence-identity"),(3,"clock-model"),
         (4,"evidence-ontology"),(5,"browser-ipc"),(6,"data-classification"),

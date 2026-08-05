@@ -26,12 +26,15 @@ ARTIFACT_SPECS = {
     "otlp_adapter_bundle": ("tree", "dist/Glassbox OTLP Adapter.app"),
     "otlp_adapter_binary": ("file", "dist/Glassbox OTLP Adapter.app/Contents/MacOS/GlassboxOTLPAdapter"),
     "otlp_broker": ("file", "dist/Glassbox OTLP Adapter.app/Contents/Helpers/glassbox-otlp-broker"),
+    "otlp_adapter_dmg": ("file", "dist/Glassbox-OTLP-Adapter-0.1.0.dmg"),
     "passive_adapter_bundle": ("tree", "dist/Glassbox Passive Context.app"),
     "passive_adapter_binary": ("file", "dist/Glassbox Passive Context.app/Contents/MacOS/GlassboxPassiveAdapter"),
     "passive_broker": ("file", "dist/Glassbox Passive Context.app/Contents/Helpers/glassbox-passive-context-broker"),
+    "passive_adapter_dmg": ("file", "dist/Glassbox-Passive-Context-0.1.0.dmg"),
     "process_adapter_bundle": ("tree", "dist/Glassbox Process Context.app"),
     "process_adapter_binary": ("file", "dist/Glassbox Process Context.app/Contents/MacOS/GlassboxProcessAdapter"),
     "process_broker": ("file", "dist/Glassbox Process Context.app/Contents/Helpers/glassbox-process-context-broker"),
+    "process_adapter_dmg": ("file", "dist/Glassbox-Process-Context-0.1.0.dmg"),
 }
 
 

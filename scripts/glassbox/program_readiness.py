@@ -25,6 +25,7 @@ EXPECTED = {
     "mysteries": "glassbox-mystery-gate/v1",
     "browser_ipc": "glassbox-browser-ipc/v1",
     "browser_artifact": "glassbox-browser-artifact/v1",
+    "auxiliary_adapters": "glassbox-auxiliary-adapters/v1",
     "live_source": "glassbox-live-source/v1",
     "resource_sampler": "glassbox-resource-sampler/v1",
     "process_context": "glassbox-process-context-gate/v1",
@@ -59,6 +60,7 @@ def promotion_summary(
         "gate2_apple_imports": loaded["apple_import"].get("gate2_promotable") is True,
         "gate6_core_distribution": loaded["macos_artifact"].get("gate6_promotable") is True,
         "gate6_browser_distribution": loaded["browser_artifact"].get("gate6_promotable") is True,
+        "gate6_auxiliary_adapter_distribution": loaded["auxiliary_adapters"].get("gate6_promotable") is True,
         "gate6_lifecycle": loaded["lifecycle"].get("gate6_promotable") is True,
         "gate6_accessibility": loaded["accessibility"].get("gate6_promotable") is True,
         "gate6_human_benchmark": loaded["benchmark"].get("gate6_promotable") is True,
@@ -71,6 +73,7 @@ def promotion_summary(
         "gate2_apple_imports": "reviewed valid logarchive and Instruments corpora plus end-to-end conversion proof",
         "gate6_core_distribution": "fresh-VM Developer ID notarization, stapling, and Gatekeeper acceptance",
         "gate6_browser_distribution": "production extension identity, fresh-VM Chrome end-to-end evidence, notarization and stapling of the separate adapter, and manual DevTools accessibility/disclosure review",
+        "gate6_auxiliary_adapter_distribution": "notarization, stapling, Gatekeeper, and fresh-VM workflow/accessibility/residue evidence for OTLP, passive-context, and process-context adapters",
         "gate6_lifecycle": "fresh-VM install, update, downgrade, revoke, reset, uninstall, reinstall, and residue evidence",
         "gate6_accessibility": "manual keyboard, VoiceOver, reduced-motion, zoom, and disclosure review",
         "gate6_human_benchmark": "pilot, power analysis, preregistration, powered held-out human study, and independent verification",
@@ -100,6 +103,7 @@ def promotion_self_test() -> dict[str, bool]:
         "apple_import": {"gate2_promotable": True},
         "macos_artifact": {"gate6_promotable": True},
         "browser_artifact": {"gate6_promotable": True},
+        "auxiliary_adapters": {"gate6_promotable": True},
         "lifecycle": {"gate6_promotable": True},
         "accessibility": {"gate6_promotable": True},
         "benchmark": {"gate6_promotable": True},
@@ -112,6 +116,16 @@ def promotion_self_test() -> dict[str, bool]:
     missing_gate6_stops_at_gate5 = (
         not blocked and blocked_highest == 5 and set(blocked_reasons) == {"gate6_browser_distribution"}
     )
+    loaded["browser_artifact"]["gate6_promotable"] = True
+    loaded["auxiliary_adapters"]["gate6_promotable"] = False
+    _, auxiliary_blocked, auxiliary_highest, auxiliary_reasons = promotion_summary(
+        loaded, True, True,
+    )
+    missing_auxiliary_stops_at_gate5 = (
+        not auxiliary_blocked
+        and auxiliary_highest == 5
+        and set(auxiliary_reasons) == {"gate6_auxiliary_adapter_distribution"}
+    )
     _, local_failure, local_highest, _ = promotion_summary(loaded, False, True)
     local_failure_never_promotes = not local_failure and local_highest is None
     _, unbound, unbound_highest, unbound_reasons = promotion_summary(loaded, True, False)
@@ -122,6 +136,7 @@ def promotion_self_test() -> dict[str, bool]:
     return {
         "all_evidence_promotes": all_evidence_promotes,
         "missing_gate6_stops_at_gate5": missing_gate6_stops_at_gate5,
+        "missing_auxiliary_stops_at_gate5": missing_auxiliary_stops_at_gate5,
         "local_failure_never_promotes": local_failure_never_promotes,
         "missing_candidate_stops_at_gate0": missing_candidate_stops_at_gate0,
     }
@@ -198,6 +213,13 @@ def main() -> int:
         and loaded["browser_artifact"].get("ok")
         is loaded["browser_artifact"].get("artifact_passed")
     )
+    checks["auxiliary_adapters_readiness_or_promotion_state_valid"] = (
+        loaded["auxiliary_adapters"].get("readiness_ok") is True
+        and loaded["auxiliary_adapters"].get("artifact_passed")
+        is loaded["auxiliary_adapters"].get("gate6_promotable")
+        and loaded["auxiliary_adapters"].get("ok")
+        is loaded["auxiliary_adapters"].get("artifact_passed")
+    )
     checks["benchmark_readiness_or_promotion_state_valid"] = (
         loaded["benchmark"].get("ok") is True
         and isinstance(loaded["benchmark"].get("benchmark_passed"), bool)
@@ -239,6 +261,7 @@ def main() -> int:
         "apple_import": "gate2_promotable",
         "macos_artifact": "gate6_promotable",
         "browser_artifact": "gate6_promotable",
+        "auxiliary_adapters": "gate6_promotable",
         "lifecycle": "gate6_promotable",
         "accessibility": "gate6_promotable",
         "benchmark": "gate6_promotable",

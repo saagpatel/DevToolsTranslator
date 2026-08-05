@@ -1,0 +1,44 @@
+{
+  "schema_version": "glassbox-auxiliary-adapters-fresh-vm/v1",
+  "ok": false,
+  "candidate_manifest_sha256": "replace-with-frozen-candidate-manifest-sha256",
+  "macos_version": "replace-with-tested-version",
+  "reviewer": {
+    "identity": "replace-with-reviewer",
+    "role": "independent_auxiliary_adapter_fresh_vm_reviewer",
+    "reviewed_at": "replace-with-RFC3339-timestamp"
+  },
+  "artifacts": {
+    "otlp_dmg_sha256": "replace-with-final-dmg-sha256",
+    "passive_dmg_sha256": "replace-with-final-dmg-sha256",
+    "process_dmg_sha256": "replace-with-final-dmg-sha256"
+  },
+  "checks": {
+    "fresh_vm_confirmed": false,
+    "otlp_gatekeeper_install": false,
+    "otlp_explicit_consent": false,
+    "otlp_capture_and_stop": false,
+    "otlp_revoke_reset": false,
+    "otlp_uninstall_no_residue": false,
+    "otlp_keyboard_voiceover_disclosure": false,
+    "passive_gatekeeper_install": false,
+    "passive_explicit_consent": false,
+    "passive_capture_and_stop": false,
+    "passive_revoke_reset": false,
+    "passive_uninstall_no_residue": false,
+    "passive_keyboard_voiceover_disclosure": false,
+    "process_gatekeeper_install": false,
+    "process_explicit_consent": false,
+    "process_capture_and_stop": false,
+    "process_revoke_reset": false,
+    "process_uninstall_no_residue": false,
+    "process_keyboard_voiceover_disclosure": false
+  },
+  "evidence_files": [
+    {"kind": "artifact_identity", "path": "artifact-identity.txt", "sha256": "replace-with-sha256"},
+    {"kind": "otlp_workflow", "path": "otlp-workflow.txt", "sha256": "replace-with-sha256"},
+    {"kind": "passive_workflow", "path": "passive-workflow.txt", "sha256": "replace-with-sha256"},
+    {"kind": "process_workflow", "path": "process-workflow.txt", "sha256": "replace-with-sha256"},
+    {"kind": "reset_uninstall_accessibility", "path": "reset-uninstall-accessibility.txt", "sha256": "replace-with-sha256"}
+  ]
+}
