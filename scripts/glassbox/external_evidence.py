@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 MAX_EVIDENCE_AGE = timedelta(days=30)
 MAX_FUTURE_SKEW = timedelta(minutes=5)
@@ -19,7 +19,9 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def verify_cms_json(cms_path: Path, ca_path: Path) -> tuple[dict[str, object], list[str]]:
+def verify_cms_json(
+    cms_path: Path, ca_path: Path
+) -> tuple[dict[str, object], list[str]]:
     errors: list[str] = []
     if (
         not cms_path.is_file()
@@ -99,7 +101,11 @@ def validate_actor(
     if not isinstance(actor.get("identity"), str) or not actor["identity"].strip():
         errors.append(f"{actor_field}.identity")
     errors.extend(
-        validate_timestamp(actor.get(timestamp_field), field=f"{actor_field}.{timestamp_field}", now=now)
+        validate_timestamp(
+            actor.get(timestamp_field),
+            field=f"{actor_field}.{timestamp_field}",
+            now=now,
+        )
     )
     return errors
 
@@ -110,7 +116,7 @@ def validate_attachments(
     cms_path: Path,
     required_kinds: set[str],
 ) -> list[str]:
-    if not isinstance(attachments, list) or len(attachments) < len(required_kinds):
+    if not isinstance(attachments, list) or len(attachments) != len(required_kinds):
         return ["evidence_files"]
     errors: list[str] = []
     base = cms_path.parent.resolve()
@@ -122,13 +128,32 @@ def validate_attachments(
             errors.append(label)
             continue
         kind = item.get("kind")
-        if not isinstance(kind, str) or kind not in required_kinds or kind in seen_kinds:
+        if (
+            not isinstance(kind, str)
+            or kind not in required_kinds
+            or kind in seen_kinds
+        ):
             errors.append(f"{label}.kind")
         else:
             seen_kinds.add(kind)
-        source = cms_path.parent / str(item.get("path", ""))
+        raw_path = item.get("path")
+        relative = PurePosixPath(raw_path) if isinstance(raw_path, str) else None
+        if (
+            relative is None
+            or not relative.parts
+            or relative.is_absolute()
+            or ".." in relative.parts
+            or "\\" in raw_path
+        ):
+            errors.append(label)
+            continue
+        source = cms_path.parent.joinpath(*relative.parts)
         try:
-            target = source.resolve()
+            current = cms_path.parent
+            if any((current := current / part).is_symlink() for part in relative.parts):
+                errors.append(label)
+                continue
+            target = source.resolve(strict=True)
         except (OSError, RuntimeError):
             errors.append(label)
             continue
@@ -148,26 +173,59 @@ def validate_attachments(
 
 
 def self_test() -> bool:
-    with tempfile.TemporaryDirectory(prefix="glassbox-external-evidence-self-test.") as temp_name:
+    with tempfile.TemporaryDirectory(
+        prefix="glassbox-external-evidence-self-test."
+    ) as temp_name:
         root = Path(temp_name)
         key = root / "key.pem"
         cert = root / "cert.pem"
         payload_path = root / "payload.json"
         cms = root / "payload.cms"
-        payload = {"schema_version": "glassbox-external-evidence-self-test/v1", "ok": True}
+        payload = {
+            "schema_version": "glassbox-external-evidence-self-test/v1",
+            "ok": True,
+        }
         payload_path.write_text(json.dumps(payload), encoding="utf-8")
         commands = [
             [
-                "/usr/bin/openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
-                "-keyout", str(key), "-out", str(cert), "-days", "1", "-subj", "/CN=Glassbox Test",
+                "/usr/bin/openssl",
+                "req",
+                "-x509",
+                "-newkey",
+                "rsa:2048",
+                "-nodes",
+                "-keyout",
+                str(key),
+                "-out",
+                str(cert),
+                "-days",
+                "1",
+                "-subj",
+                "/CN=Glassbox Test",
             ],
             [
-                "/usr/bin/openssl", "cms", "-sign", "-binary", "-in", str(payload_path),
-                "-signer", str(cert), "-inkey", str(key), "-outform", "DER", "-out", str(cms),
-                "-nosmimecap", "-nodetach",
+                "/usr/bin/openssl",
+                "cms",
+                "-sign",
+                "-binary",
+                "-in",
+                str(payload_path),
+                "-signer",
+                str(cert),
+                "-inkey",
+                str(key),
+                "-outform",
+                "DER",
+                "-out",
+                str(cms),
+                "-nosmimecap",
+                "-nodetach",
             ],
         ]
-        if any(subprocess.run(command, capture_output=True).returncode for command in commands):
+        if any(
+            subprocess.run(command, capture_output=True).returncode
+            for command in commands
+        ):
             return False
         decoded, valid_errors = verify_cms_json(cms, cert)
         valid_signature = decoded == payload and not valid_errors
@@ -180,10 +238,14 @@ def self_test() -> bool:
 
         now = datetime.now(timezone.utc)
         stale_rejected = validate_timestamp(
-            (now - MAX_EVIDENCE_AGE - timedelta(seconds=1)).isoformat(), field="time", now=now,
+            (now - MAX_EVIDENCE_AGE - timedelta(seconds=1)).isoformat(),
+            field="time",
+            now=now,
         ) == ["time_stale"]
         future_rejected = validate_timestamp(
-            (now + MAX_FUTURE_SKEW + timedelta(seconds=1)).isoformat(), field="time", now=now,
+            (now + MAX_FUTURE_SKEW + timedelta(seconds=1)).isoformat(),
+            field="time",
+            now=now,
         ) == ["time_future"]
         proof = root / "proof.txt"
         proof.write_text("proof", encoding="utf-8")
@@ -192,17 +254,54 @@ def self_test() -> bool:
             {"kind": "second", "path": proof.name, "sha256": sha256(proof)},
         ]
         duplicate_rejected = "evidence_files[1]" in validate_attachments(
-            attachments, cms_path=cms, required_kinds={"first", "second"},
+            attachments,
+            cms_path=cms,
+            required_kinds={"first", "second"},
         )
-        return all([
-            valid_signature, tamper_rejected, stale_rejected, future_rejected,
-            duplicate_rejected,
-        ])
+        absolute = [dict(item) for item in attachments]
+        absolute[0]["path"] = str(proof)
+        absolute_rejected = "evidence_files[0]" in validate_attachments(
+            absolute,
+            cms_path=cms,
+            required_kinds={"first", "second"},
+        )
+        evidence_dir = root / "evidence"
+        evidence_dir.mkdir()
+        nested = evidence_dir / "nested.txt"
+        nested.write_text("nested", encoding="utf-8")
+        (root / "linked-evidence").symlink_to(evidence_dir, target_is_directory=True)
+        symlink_ancestor = [
+            {
+                "kind": "first",
+                "path": "linked-evidence/nested.txt",
+                "sha256": sha256(nested),
+            }
+        ]
+        symlink_ancestor_rejected = "evidence_files[0]" in validate_attachments(
+            symlink_ancestor,
+            cms_path=cms,
+            required_kinds={"first"},
+        )
+        return all(
+            [
+                valid_signature,
+                tamper_rejected,
+                stale_rejected,
+                future_rejected,
+                duplicate_rejected,
+                absolute_rejected,
+                symlink_ancestor_rejected,
+            ]
+        )
 
 
 if __name__ == "__main__":
     if sys.argv[1:] != ["--self-test"]:
         raise SystemExit("usage: external_evidence.py --self-test")
     passed = self_test()
-    print(json.dumps({"schema_version": "glassbox-external-evidence-self-test/v1", "ok": passed}))
+    print(
+        json.dumps(
+            {"schema_version": "glassbox-external-evidence-self-test/v1", "ok": passed}
+        )
+    )
     raise SystemExit(0 if passed else 1)

@@ -11,13 +11,22 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from external_evidence import sha256, validate_attachments, validate_timestamp, verify_cms_json
+from external_evidence import (
+    sha256,
+    validate_attachments,
+    validate_timestamp,
+    verify_cms_json,
+)
 from candidate_manifest import load_and_validate
 
 CHECKS = {
-    "participant_registry_verified", "study_records_verified", "scoring_export_verified",
-    "adjudication_log_verified", "preregistration_verified",
-    "held_out_corpus_separation_verified", "reported_metrics_recomputed",
+    "participant_registry_verified",
+    "study_records_verified",
+    "scoring_export_verified",
+    "adjudication_log_verified",
+    "preregistration_verified",
+    "held_out_corpus_separation_verified",
+    "reported_metrics_recomputed",
 }
 
 EVIDENCE_HASHES = {
@@ -29,10 +38,57 @@ EVIDENCE_HASHES = {
     "held_out_corpus_manifest": ("corpus_manifest", "sha256"),
     "metric_recomputation": ("integrity", "metric_recomputation_sha256"),
 }
+LOCAL_CHECKS = {
+    "external_evidence_self_tests_pass",
+    "incomplete_external_template_fails_closed",
+    "promotion_verifier_self_tests_pass",
+    "public_corpus_not_mislabeled_held_out",
+    "sixty_public_rehearsal_scenarios",
+    "validator_self_tests_pass",
+}
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, text=True, capture_output=True)
+
+
+def git(root: Path, *args: str) -> str | None:
+    result = subprocess.run(["git", *args], cwd=root, text=True, capture_output=True)
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def parse_time(value: object) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed.astimezone(timezone.utc) if parsed.tzinfo is not None else None
+
+
+def validate_local_readiness(
+    local: object, *, git_head: str | None, git_tree: str | None, git_dirty: bool
+) -> list[str]:
+    if not isinstance(local, dict):
+        return ["local_readiness"]
+    checks = local.get("checks")
+    valid = (
+        local.get("schema_version") == "glassbox-benchmark-readiness/v1"
+        and local.get("ok") is True
+        and local.get("benchmark_passed") is False
+        and local.get("gate6_promotable") is False
+        and local.get("formal_benchmark_status") == "external_artifacts_required"
+        and local.get("git_head") == git_head
+        and local.get("git_tree") == git_tree
+        and local.get("git_dirty") is False
+        and git_dirty is False
+        and isinstance(checks, dict)
+        and set(checks) == LOCAL_CHECKS
+        and all(checks.get(name) is True for name in LOCAL_CHECKS)
+        and local.get("errors") == []
+    )
+    return [] if valid else ["local_readiness"]
 
 
 def validate_independent(
@@ -46,12 +102,20 @@ def validate_independent(
 ) -> list[str]:
     errors: list[str] = []
     root_keys = {
-        "schema_version", "ok", "benchmark_artifact_sha256",
-        "candidate_manifest_sha256", "verifier", "evidence_files", "checks",
+        "schema_version",
+        "ok",
+        "benchmark_artifact_sha256",
+        "candidate_manifest_sha256",
+        "verifier",
+        "evidence_files",
+        "checks",
     }
     if not isinstance(independent, dict) or set(independent) != root_keys:
         return ["independent_root_keys"]
-    if independent.get("schema_version") != "glassbox-benchmark-independent-verification/v1":
+    if (
+        independent.get("schema_version")
+        != "glassbox-benchmark-independent-verification/v1"
+    ):
         errors.append("independent_schema")
     if independent.get("ok") is not True:
         errors.append("independent_ok")
@@ -59,19 +123,42 @@ def validate_independent(
         errors.append("independent_study_hash")
     if independent.get("candidate_manifest_sha256") != candidate_digest:
         errors.append("independent_candidate_manifest_hash")
-    if not isinstance(study_data, dict) or study_data.get("candidate_manifest_sha256") != candidate_digest:
+    if (
+        not isinstance(study_data, dict)
+        or study_data.get("candidate_manifest_sha256") != candidate_digest
+    ):
         errors.append("study_candidate_manifest_hash")
     verifier = independent.get("verifier")
-    if not isinstance(verifier, dict) or set(verifier) != {"identity", "role", "verified_at"}:
+    if not isinstance(verifier, dict) or set(verifier) != {
+        "identity",
+        "role",
+        "verified_at",
+    }:
         errors.append("independent_verifier")
     else:
         if verifier.get("role") != "independent_benchmark_verifier":
             errors.append("independent_verifier_role")
-        if not isinstance(verifier.get("identity"), str) or not verifier["identity"].strip():
+        if (
+            not isinstance(verifier.get("identity"), str)
+            or not verifier["identity"].strip()
+        ):
             errors.append("independent_verifier_identity")
-        errors.extend(validate_timestamp(
-            verifier.get("verified_at"), field="independent_verifier_time", now=now,
-        ))
+        errors.extend(
+            validate_timestamp(
+                verifier.get("verified_at"),
+                field="independent_verifier_time",
+                now=now,
+            )
+        )
+        verified_at = parse_time(verifier.get("verified_at"))
+        formal = (
+            study_data.get("formal_study") if isinstance(study_data, dict) else None
+        )
+        completed_at = parse_time(
+            formal.get("completed_at") if isinstance(formal, dict) else None
+        )
+        if verified_at is None or completed_at is None or verified_at < completed_at:
+            errors.append("independent_verifier_before_study_completion")
     checks = independent.get("checks")
     if (
         not isinstance(checks, dict)
@@ -81,13 +168,22 @@ def validate_independent(
         errors.append("independent_checks")
 
     evidence_files = independent.get("evidence_files")
-    errors.extend(validate_attachments(
-        evidence_files, cms_path=cms_path, required_kinds=set(EVIDENCE_HASHES),
-    ))
-    by_kind = {
-        item.get("kind"): item.get("sha256")
-        for item in evidence_files if isinstance(item, dict)
-    } if isinstance(evidence_files, list) else {}
+    errors.extend(
+        validate_attachments(
+            evidence_files,
+            cms_path=cms_path,
+            required_kinds=set(EVIDENCE_HASHES),
+        )
+    )
+    by_kind = (
+        {
+            item.get("kind"): item.get("sha256")
+            for item in evidence_files
+            if isinstance(item, dict)
+        }
+        if isinstance(evidence_files, list)
+        else {}
+    )
     for kind, (section_name, field_name) in EVIDENCE_HASHES.items():
         section = study_data.get(section_name) if isinstance(study_data, dict) else None
         expected = section.get(field_name) if isinstance(section, dict) else None
@@ -98,7 +194,9 @@ def validate_independent(
 
 def self_test() -> bool:
     now = datetime.now(timezone.utc)
-    with tempfile.TemporaryDirectory(prefix="glassbox-benchmark-promotion-self-test.") as temp_name:
+    with tempfile.TemporaryDirectory(
+        prefix="glassbox-benchmark-promotion-self-test."
+    ) as temp_name:
         root = Path(temp_name)
         cms = root / "review.cms"
         cms.write_bytes(b"self-test-placeholder")
@@ -114,6 +212,7 @@ def self_test() -> bool:
         study_data = {
             "candidate_manifest_sha256": candidate_digest,
             "corpus_manifest": {"sha256": files["held_out_corpus_manifest"]},
+            "formal_study": {"completed_at": (now - timedelta(hours=1)).isoformat()},
             "integrity": {
                 field: files[kind]
                 for kind, (section, field) in EVIDENCE_HASHES.items()
@@ -134,31 +233,103 @@ def self_test() -> bool:
             "checks": {name: True for name in CHECKS},
         }
         valid = not validate_independent(
-            independent, study_data=study_data, study_artifact_sha256="b" * 64,
-            candidate_digest=candidate_digest, cms_path=cms, now=now,
+            independent,
+            study_data=study_data,
+            study_artifact_sha256="b" * 64,
+            candidate_digest=candidate_digest,
+            cms_path=cms,
+            now=now,
         )
 
         mismatched = json.loads(json.dumps(study_data))
         mismatched["integrity"]["participant_registry_sha256"] = "c" * 64
-        hash_mismatch_rejected = "evidence_hash_participant_registry" in validate_independent(
-            independent, study_data=mismatched, study_artifact_sha256="b" * 64,
-            candidate_digest=candidate_digest, cms_path=cms, now=now,
+        hash_mismatch_rejected = (
+            "evidence_hash_participant_registry"
+            in validate_independent(
+                independent,
+                study_data=mismatched,
+                study_artifact_sha256="b" * 64,
+                candidate_digest=candidate_digest,
+                cms_path=cms,
+                now=now,
+            )
         )
 
         escaped = json.loads(json.dumps(independent))
         escaped["evidence_files"][0]["path"] = "../escape.json"
-        path_escape_rejected = bool(validate_independent(
-            escaped, study_data=study_data, study_artifact_sha256="b" * 64,
-            candidate_digest=candidate_digest, cms_path=cms, now=now,
-        ))
+        path_escape_rejected = bool(
+            validate_independent(
+                escaped,
+                study_data=study_data,
+                study_artifact_sha256="b" * 64,
+                candidate_digest=candidate_digest,
+                cms_path=cms,
+                now=now,
+            )
+        )
 
         future = json.loads(json.dumps(independent))
         future["verifier"]["verified_at"] = (now + timedelta(minutes=6)).isoformat()
-        future_time_rejected = "independent_verifier_time_future" in validate_independent(
-            future, study_data=study_data, study_artifact_sha256="b" * 64,
-            candidate_digest=candidate_digest, cms_path=cms, now=now,
+        future_time_rejected = (
+            "independent_verifier_time_future"
+            in validate_independent(
+                future,
+                study_data=study_data,
+                study_artifact_sha256="b" * 64,
+                candidate_digest=candidate_digest,
+                cms_path=cms,
+                now=now,
+            )
         )
-        return all([valid, hash_mismatch_rejected, path_escape_rejected, future_time_rejected])
+        premature = json.loads(json.dumps(independent))
+        premature["verifier"]["verified_at"] = (now - timedelta(hours=2)).isoformat()
+        premature_review_rejected = (
+            "independent_verifier_before_study_completion"
+            in validate_independent(
+                premature,
+                study_data=study_data,
+                study_artifact_sha256="b" * 64,
+                candidate_digest=candidate_digest,
+                cms_path=cms,
+                now=now,
+            )
+        )
+        local = {
+            "schema_version": "glassbox-benchmark-readiness/v1",
+            "ok": True,
+            "benchmark_passed": False,
+            "gate6_promotable": False,
+            "formal_benchmark_status": "external_artifacts_required",
+            "git_head": "c" * 40,
+            "git_tree": "d" * 40,
+            "git_dirty": False,
+            "checks": {name: True for name in LOCAL_CHECKS},
+            "errors": [],
+        }
+        local_valid = not validate_local_readiness(
+            local, git_head="c" * 40, git_tree="d" * 40, git_dirty=False
+        )
+        stale_local = json.loads(json.dumps(local))
+        stale_local["git_head"] = "e" * 40
+        stale_local_rejected = bool(
+            validate_local_readiness(
+                stale_local,
+                git_head="c" * 40,
+                git_tree="d" * 40,
+                git_dirty=False,
+            )
+        )
+        return all(
+            [
+                valid,
+                hash_mismatch_rejected,
+                path_escape_rejected,
+                future_time_rejected,
+                premature_review_rejected,
+                local_valid,
+                stale_local_rejected,
+            ]
+        )
 
 
 def main() -> int:
@@ -172,8 +343,10 @@ def main() -> int:
     parser.add_argument("--receipt", required=True, type=Path)
     args = parser.parse_args()
     errors: list[str] = []
+    root = args.root.resolve(strict=True)
     _, candidate_digest, candidate_errors = load_and_validate(
-        args.root.resolve(), args.candidate_manifest.resolve(),
+        root,
+        args.candidate_manifest.resolve(),
     )
     errors.extend(candidate_errors)
     try:
@@ -181,28 +354,36 @@ def main() -> int:
     except (OSError, json.JSONDecodeError) as exc:
         local = {}
         errors.append(f"local readiness unreadable: {exc}")
-    if not (
-        local.get("schema_version") == "glassbox-benchmark-readiness/v1"
-        and local.get("ok") is True
-        and local.get("benchmark_passed") is False
-        and local.get("gate6_promotable") is False
-        and isinstance(local.get("checks"), dict)
-        and all(value is True for value in local["checks"].values())
-    ):
-        errors.append("local_readiness")
+    errors.extend(
+        validate_local_readiness(
+            local,
+            git_head=git(root, "rev-parse", "HEAD"),
+            git_tree=git(root, "rev-parse", "HEAD^{tree}"),
+            git_dirty=bool(git(root, "status", "--porcelain")),
+        )
+    )
 
-    with tempfile.TemporaryDirectory(prefix="glassbox-benchmark-promotion.") as temp_name:
+    with tempfile.TemporaryDirectory(
+        prefix="glassbox-benchmark-promotion."
+    ) as temp_name:
         temp = Path(temp_name)
         study_receipt = temp / "study.json"
         validation = run(
-            "python3", str(args.root / "scripts/glassbox/validate_benchmark_results.py"),
-            str(args.study), "--receipt", str(study_receipt),
+            "python3",
+            str(root / "scripts/glassbox/validate_benchmark_results.py"),
+            str(args.study),
+            "--receipt",
+            str(study_receipt),
         )
         try:
             study = json.loads(study_receipt.read_text())
         except (OSError, json.JSONDecodeError):
             study = {}
-        if validation.returncode != 0 or study.get("ok") is not True or study.get("benchmark_passed") is not True:
+        if (
+            validation.returncode != 0
+            or study.get("ok") is not True
+            or study.get("benchmark_passed") is not True
+        ):
             errors.append("human_study")
 
         try:
@@ -211,34 +392,49 @@ def main() -> int:
             study_data = {}
             errors.append("human_study_payload")
         independent, cms_errors = verify_cms_json(
-            args.independent_cms.resolve(), args.verifier_ca.resolve(),
+            args.independent_cms.resolve(),
+            args.verifier_ca.resolve(),
         )
         errors.extend(f"independent_{error}" for error in cms_errors)
 
-    errors.extend(validate_independent(
-        independent,
-        study_data=study_data,
-        study_artifact_sha256=sha256(args.study) if args.study.is_file() else "",
-        candidate_digest=candidate_digest,
-        cms_path=args.independent_cms.resolve(),
-    ))
+    errors.extend(
+        validate_independent(
+            independent,
+            study_data=study_data,
+            study_artifact_sha256=sha256(args.study) if args.study.is_file() else "",
+            candidate_digest=candidate_digest,
+            cms_path=args.independent_cms.resolve(),
+        )
+    )
 
     promoted = not errors
     result = dict(local)
-    result.update({
-        "schema_version": "glassbox-benchmark-readiness/v1",
-        "ok": promoted,
-        "benchmark_passed": promoted,
-        "gate6_promotable": promoted,
-        "formal_benchmark_status": "independently_verified" if promoted else "promotion_rejected",
-        "study_receipt": study if promoted else None,
-        "independent_verification": independent if promoted else None,
-        "independent_cms_sha256": sha256(args.independent_cms) if args.independent_cms.is_file() else None,
-        "verifier_ca_sha256": sha256(args.verifier_ca) if args.verifier_ca.is_file() else None,
-        "candidate_manifest_sha256": candidate_digest if promoted else None,
-        "external_requirements": [] if promoted else ["valid held-out human study and CA-verified independent CMS attestation"],
-        "errors": sorted(set(errors)),
-    })
+    result.update(
+        {
+            "schema_version": "glassbox-benchmark-readiness/v1",
+            "ok": promoted,
+            "benchmark_passed": promoted,
+            "gate6_promotable": promoted,
+            "formal_benchmark_status": "independently_verified"
+            if promoted
+            else "promotion_rejected",
+            "study_receipt": study if promoted else None,
+            "independent_verification": independent if promoted else None,
+            "independent_cms_sha256": sha256(args.independent_cms)
+            if args.independent_cms.is_file()
+            else None,
+            "verifier_ca_sha256": sha256(args.verifier_ca)
+            if args.verifier_ca.is_file()
+            else None,
+            "candidate_manifest_sha256": candidate_digest if promoted else None,
+            "external_requirements": []
+            if promoted
+            else [
+                "valid held-out human study and CA-verified independent CMS attestation"
+            ],
+            "errors": sorted(set(errors)),
+        }
+    )
     args.receipt.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if promoted else 1
@@ -247,9 +443,13 @@ def main() -> int:
 if __name__ == "__main__":
     if sys.argv[1:] == ["--self-test"]:
         passed = self_test()
-        print(json.dumps({
-            "schema_version": "glassbox-benchmark-promotion-self-test/v1",
-            "ok": passed,
-        }))
+        print(
+            json.dumps(
+                {
+                    "schema_version": "glassbox-benchmark-promotion-self-test/v1",
+                    "ok": passed,
+                }
+            )
+        )
         raise SystemExit(0 if passed else 1)
     raise SystemExit(main())

@@ -1,11 +1,11 @@
 {
-  "schema_version": "glassbox-human-benchmark/v1",
+  "schema_version": "glassbox-human-benchmark/v2",
   "artifact_role": "external_human_study",
   "candidate_manifest_sha256": "replace-with-frozen-candidate-manifest-sha256",
   "corpus_manifest": {"held_out": null, "family_count": 5, "scenario_count": null, "sha256": null, "pre_freeze_excluded_roles": ["glassbox_implementer", "scenario_designer"]},
   "pilot": {"human_participants": null, "agents_as_participants": false, "participant_count": null, "randomized": null, "counterbalanced": null, "efficacy_claimed": false, "variance_estimate": null},
-  "power_analysis": {"computed_from_pilot": null, "formal_sample_size": null, "method": null, "primary_outcome": null},
-  "preregistration": {"registered_at": null, "formal_data_collection_started_at": null, "public_record": null, "primary_outcome": null, "statistical_test": null, "exclusions": [], "stopping_rule": null},
-  "formal_study": {"human_participants": null, "agents_as_participants": false, "participant_count": null, "randomized": null, "counterbalanced": null, "independent_scoring": null, "blinded_adjudication": null, "metrics": {"addressable_evidence_citation_rate": null, "unsupported_causal_claim_rate": null, "seeded_secret_leaks": null, "visible_limitation_rate": null, "time_to_supported_conclusion_improved": null, "primary_p_value": null}},
+  "power_analysis": {"alpha": null, "computed_from_pilot": null, "formal_sample_size": null, "method": null, "minimum_meaningful_time_reduction_fraction": null, "primary_outcome": "time_to_first_evidence_supported_conclusion", "target_power": null},
+  "preregistration": {"registered_at": null, "formal_data_collection_started_at": null, "public_record": null, "primary_outcome": "time_to_first_evidence_supported_conclusion", "statistical_test": null, "exclusions": [], "stopping_rule": null, "minimum_meaningful_time_reduction_fraction": null},
+  "formal_study": {"human_participants": null, "agents_as_participants": false, "completed_at": null, "participant_count": null, "randomized": null, "counterbalanced": null, "independent_scoring": null, "blinded_adjudication": null, "metrics": {"addressable_evidence_citation_rate": null, "unsupported_causal_claim_rate": null, "seeded_secret_leaks": null, "visible_limitation_rate": null, "time_to_supported_conclusion_improved": null, "time_reduction_fraction": null, "time_reduction_confidence_interval_95": {"lower": null, "upper": null}, "primary_p_value": null}},
   "integrity": {"participant_registry_sha256": null, "study_records_sha256": null, "scoring_export_sha256": null, "adjudication_log_sha256": null, "preregistration_record_sha256": null, "metric_recomputation_sha256": null}
 }
