@@ -30,16 +30,25 @@ MISMATCH_STATUS=$?
 set -e
 
 pkill -x Glassbox >/dev/null 2>&1 || true
+for _ in {1..50}; do
+  if ! pgrep -x Glassbox >/dev/null; then break; fi
+  sleep 0.1
+done
+if pgrep -x Glassbox >/dev/null; then
+  echo "A prior Glassbox process did not terminate before the import probe" >&2
+  exit 1
+fi
+INTERACTION_PROBE_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
 env -i HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" \
   GLASSBOX_IMPORT_FORMAT=otlp-jsonl GLASSBOX_SOURCE_SHA256="$OTLP_SHA" \
-  "$BIN" --glassbox-import-probe --glassbox-interaction-probe <"$OTLP" \
+  "$BIN" --glassbox-import-probe --glassbox-interaction-probe "$INTERACTION_PROBE_ID" <"$OTLP" \
   >"$TEMP/app-output" 2>"$TEMP/app-error" &
 APP_PID=$!
 INTERACTION_PAYLOAD=""
 for _ in {1..600}; do
   WINDOW_TITLE="$(osascript -e 'tell application "System Events" to if exists process "Glassbox" then tell process "Glassbox" to if exists first window then return name of first window as text' 2>/dev/null || true)"
-  if [[ "$WINDOW_TITLE" == "Glassbox probe result "* ]]; then
-    INTERACTION_PAYLOAD="${WINDOW_TITLE#Glassbox probe result }"
+  if [[ "$WINDOW_TITLE" == "Glassbox probe result $INTERACTION_PROBE_ID "* ]]; then
+    INTERACTION_PAYLOAD="${WINDOW_TITLE#Glassbox probe result $INTERACTION_PROBE_ID }"
     break
   fi
   kill -0 "$APP_PID" 2>/dev/null || break
