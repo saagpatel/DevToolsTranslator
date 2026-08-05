@@ -26,9 +26,11 @@ cp "$SWIFT_BIN" "$MACOS/$APP_NAME"
 cp "$RUST_BIN" "$HELPERS/glassbox-native-bridge"
 cp "$PACKAGE/Support/Info.plist" "$CONTENTS/Info.plist"
 cp "$PACKAGE/Support/PrivacyInfo.xcprivacy" "$RESOURCES/PrivacyInfo.xcprivacy"
+/usr/bin/xattr -cr "$APP"
 SIGN_ARGS=(--force --options runtime --sign "$SIGN_IDENTITY")
 [[ "$SIGN_IDENTITY" != "-" ]] && SIGN_ARGS+=(--timestamp)
 codesign "${SIGN_ARGS[@]}" "$HELPERS/glassbox-native-bridge" >/dev/null
+/usr/bin/xattr -cr "$APP"
 codesign "${SIGN_ARGS[@]}" --entitlements "$PACKAGE/Support/Glassbox.entitlements" "$APP" >/dev/null
 
 open_app() { /usr/bin/open -n "$APP"; }

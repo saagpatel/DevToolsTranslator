@@ -26,6 +26,7 @@ ARTIFACT_MEMBERS = {
     "otlp_adapter_dmg": "artifacts/Glassbox-OTLP-Adapter-0.1.0.dmg",
     "passive_adapter_dmg": "artifacts/Glassbox-Passive-Context-0.1.0.dmg",
     "process_adapter_dmg": "artifacts/Glassbox-Process-Context-0.1.0.dmg",
+    "instruments_adapter_dmg": "artifacts/Glassbox-Instruments-Adapter-0.1.0.dmg",
     "browser_extension_zip": "artifacts/Glassbox-Selected-Tab-Extension-0.1.0.zip",
 }
 
@@ -35,6 +36,7 @@ ARTIFACT_SOURCE_PATHS = {
     "otlp_adapter_dmg": "dist/Glassbox-OTLP-Adapter-0.1.0.dmg",
     "passive_adapter_dmg": "dist/Glassbox-Passive-Context-0.1.0.dmg",
     "process_adapter_dmg": "dist/Glassbox-Process-Context-0.1.0.dmg",
+    "instruments_adapter_dmg": "dist/Glassbox-Instruments-Adapter-0.1.0.dmg",
     "browser_extension_zip": "dist/Glassbox-Selected-Tab-Extension-0.1.0.zip",
 }
 
@@ -60,6 +62,9 @@ EXPECTED_CANDIDATE_ARTIFACTS = {
     "process_adapter_binary",
     "process_broker",
     "process_adapter_dmg",
+    "instruments_adapter_bundle",
+    "instruments_adapter_binary",
+    "instruments_adapter_dmg",
 }
 
 SOURCE_MEMBERS = {

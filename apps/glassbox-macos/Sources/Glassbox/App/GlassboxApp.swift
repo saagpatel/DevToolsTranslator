@@ -17,9 +17,6 @@ struct GlassboxApp: App {
     if CommandLine.arguments == [CommandLine.arguments[0], "--glassbox-apple-log-project"] {
       exit(AppleLogProjectionCommand.run())
     }
-    if CommandLine.arguments == [CommandLine.arguments[0], "--glassbox-instruments-har-project"] {
-      exit(InstrumentsTraceProjectionCommand.run())
-    }
     _store = StateObject(wrappedValue: InvestigationStore())
   }
 

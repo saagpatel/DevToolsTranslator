@@ -86,7 +86,7 @@ def promotion_summary(
         "gate2_apple_imports": "reviewed valid logarchive and Instruments corpora plus end-to-end conversion proof",
         "gate6_core_distribution": "fresh-VM Developer ID notarization, stapling, and Gatekeeper acceptance",
         "gate6_browser_distribution": "production extension identity, fresh-VM Chrome end-to-end evidence, notarization and stapling of the separate adapter, and manual DevTools accessibility/disclosure review",
-        "gate6_auxiliary_adapter_distribution": "notarization, stapling, Gatekeeper, and fresh-VM workflow/accessibility/residue evidence for OTLP, passive-context, and process-context adapters",
+        "gate6_auxiliary_adapter_distribution": "notarization, stapling, Gatekeeper, and fresh-VM workflow/accessibility/residue evidence for Instruments, OTLP, passive-context, and process-context adapters",
         "gate6_lifecycle": "fresh-VM install, update, downgrade, revoke, reset, uninstall, reinstall, and residue evidence",
         "gate6_accessibility": "manual keyboard, VoiceOver, reduced-motion, zoom, and disclosure review",
         "gate6_human_benchmark": "pilot, power analysis, preregistration, powered held-out human study, and independent verification",

@@ -299,11 +299,32 @@ struct RawEntry {
     connection: Option<IgnoredAny>,
     #[serde(default)]
     comment: Option<IgnoredAny>,
+    #[serde(default, rename = "_fetchType")]
+    apple_fetch_type: Option<IgnoredAny>,
+    #[serde(default, rename = "_precisionPreservingTimings")]
+    apple_precision_timings: Option<IgnoredAny>,
+    #[serde(default, rename = "_sourceApplicationBundleIdentifier")]
+    apple_source_bundle: Option<IgnoredAny>,
+    #[serde(default, rename = "_taskUUID")]
+    apple_task_uuid: Option<IgnoredAny>,
+    #[serde(default, rename = "_transactionUUID")]
+    apple_transaction_uuid: Option<IgnoredAny>,
 }
 
 impl RawEntry {
     fn into_record(self, ordinal: u64) -> Result<HarRecord, HarImportError> {
-        let _ = (self.pageref, self.cache, self.server_ip_address, self.connection, self.comment);
+        let _ = (
+            self.pageref,
+            self.cache,
+            self.server_ip_address,
+            self.connection,
+            self.comment,
+            self.apple_fetch_type,
+            self.apple_precision_timings,
+            self.apple_source_bundle,
+            self.apple_task_uuid,
+            self.apple_transaction_uuid,
+        );
         validate_short("method", &self.request.method)?;
         validate_short("request HTTP version", &self.request.http_version)?;
         validate_short("response status text", &self.response.status_text)?;
@@ -583,5 +604,17 @@ mod tests {
         assert_eq!(stats.entries, 1);
         assert_eq!(records[0].structured_url, "https://[redacted]/[redacted]?keys=2");
         assert!(!format!("{records:?}").contains("203.0.113.9"));
+    }
+
+    #[test]
+    fn accepts_only_the_reviewed_apple_instruments_extensions() {
+        let apple = VALID.replace(
+            "\"time\":12.5",
+            "\"time\":12.5,\"_fetchType\":\"network\",\"_precisionPreservingTimings\":{},\"_sourceApplicationBundleIdentifier\":null,\"_taskUUID\":\"fixture-task\",\"_transactionUUID\":\"fixture-transaction\"",
+        );
+        let stats = parse(Cursor::new(apple), "instruments_har", |_| Ok(())).unwrap();
+        assert_eq!(stats.entries, 1);
+        let unknown = VALID.replace("\"time\":12.5", "\"time\":12.5,\"_appleUnknown\":true");
+        assert!(parse(Cursor::new(unknown), "instruments_har", |_| Ok(())).is_err());
     }
 }

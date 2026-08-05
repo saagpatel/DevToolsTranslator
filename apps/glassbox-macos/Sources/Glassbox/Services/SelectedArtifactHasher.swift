@@ -53,9 +53,7 @@ enum SelectedArtifactHasher {
       }
       guard readBytes == size else { throw SelectedArtifactHashError.changedDuringRead }
       var after = stat()
-      guard fstat(descriptor, &after) == 0, after.st_size == metadata.st_size,
-        after.st_mtimespec.tv_sec == metadata.st_mtimespec.tv_sec,
-        after.st_mtimespec.tv_nsec == metadata.st_mtimespec.tv_nsec
+      guard fstat(descriptor, &after) == 0, stable(metadata, after)
       else { throw SelectedArtifactHashError.changedDuringRead }
       try handle.seek(toOffset: 0)
       return HashedRegularFile(
@@ -73,10 +71,12 @@ enum SelectedArtifactHasher {
     guard rootValues.isDirectory == true, rootValues.isSymbolicLink != true else {
       throw SelectedArtifactHashError.invalidRoot
     }
+    let canonicalRoot = root.resolvingSymlinksInPath().standardizedFileURL
+    let prefix = canonicalRoot.path + "/"
     var enumerationFailed = false
     guard
       let enumerator = FileManager.default.enumerator(
-        at: root,
+        at: canonicalRoot,
         includingPropertiesForKeys: [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey],
         options: [],
         errorHandler: { _, _ in
@@ -97,11 +97,15 @@ enum SelectedArtifactHasher {
         throw SelectedArtifactHashError.unsupportedFileType
       }
       guard files.count < maximumFiles else { throw SelectedArtifactHashError.tooManyFiles }
-      let relative = String(url.path.dropFirst(root.path.count + 1))
+      let canonicalURL = url.resolvingSymlinksInPath().standardizedFileURL
+      guard canonicalURL.path.hasPrefix(prefix) else {
+        throw SelectedArtifactHashError.invalidRelativePath
+      }
+      let relative = String(canonicalURL.path.dropFirst(prefix.count))
       guard !relative.isEmpty, relative.utf8.count <= maximumRelativePathBytes,
         !relative.split(separator: "/").contains("..")
       else { throw SelectedArtifactHashError.invalidRelativePath }
-      files.append((relative, url))
+      files.append((relative, canonicalURL))
     }
     guard !enumerationFailed else { throw SelectedArtifactHashError.invalidRoot }
     files.sort { $0.relative.utf8.lexicographicallyPrecedes($1.relative.utf8) }
@@ -132,7 +136,10 @@ enum SelectedArtifactHasher {
         guard readBytes <= size else { throw SelectedArtifactHashError.changedDuringRead }
         digest.update(data: chunk)
       }
-      guard readBytes == size else { throw SelectedArtifactHashError.changedDuringRead }
+      var after = stat()
+      guard readBytes == size, fstat(descriptor, &after) == 0, stable(metadata, after) else {
+        throw SelectedArtifactHashError.changedDuringRead
+      }
     }
     return digest.finalize().map { String(format: "%02x", $0) }.joined()
   }
@@ -141,5 +148,15 @@ enum SelectedArtifactHasher {
     let length = UInt64(data.count).bigEndian
     digest.update(data: withUnsafeBytes(of: length) { Data($0) })
     digest.update(data: data)
+  }
+
+  private static func stable(_ left: stat, _ right: stat) -> Bool {
+    left.st_dev == right.st_dev && left.st_ino == right.st_ino
+      && (left.st_mode & S_IFMT) == (right.st_mode & S_IFMT)
+      && left.st_size == right.st_size
+      && left.st_mtimespec.tv_sec == right.st_mtimespec.tv_sec
+      && left.st_mtimespec.tv_nsec == right.st_mtimespec.tv_nsec
+      && left.st_ctimespec.tv_sec == right.st_ctimespec.tv_sec
+      && left.st_ctimespec.tv_nsec == right.st_ctimespec.tv_nsec
   }
 }

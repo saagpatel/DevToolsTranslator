@@ -1,5 +1,7 @@
+import Darwin
 import Foundation
 import Testing
+
 @testable import Glassbox
 
 @Test func traceStagingCopiesOnlyRegularContentWithOpaqueNamesAndSafeModes() throws {
@@ -21,6 +23,31 @@ import Testing
   let attributes = try FileManager.default.attributesOfItem(
     atPath: destination.appendingPathComponent("nested/data").path)
   #expect((attributes[.posixPermissions] as? NSNumber)?.intValue == 0o600)
+}
+
+@Test func descriptorRelativeStagingSurvivesSourceRename() throws {
+  let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  let source = base.appendingPathComponent("selected.trace", isDirectory: true)
+  let renamed = base.appendingPathComponent("renamed-after-open", isDirectory: true)
+  let staging = base.appendingPathComponent("staging", isDirectory: true)
+  try FileManager.default.createDirectory(at: source, withIntermediateDirectories: true)
+  try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+  defer { try? FileManager.default.removeItem(at: base) }
+  try Data("descriptor-capability".utf8).write(to: source.appendingPathComponent("data"))
+
+  let descriptor = open(source.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+  #expect(descriptor >= 0)
+  guard descriptor >= 0 else { return }
+  defer { close(descriptor) }
+  try FileManager.default.moveItem(at: source, to: renamed)
+
+  let destination = try SelectedArtifactStager.stageDirectory(
+    sourceDescriptor: descriptor,
+    pathExtension: "trace",
+    into: staging)
+  #expect(
+    try Data(contentsOf: destination.appendingPathComponent("data"))
+      == Data("descriptor-capability".utf8))
 }
 
 @Test func traceStagingRejectsLinksAndRemovesPartialDestination() throws {

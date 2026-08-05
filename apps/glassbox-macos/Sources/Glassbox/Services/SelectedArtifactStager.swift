@@ -15,28 +15,55 @@ enum SelectedArtifactStageError: Error, Equatable {
 enum SelectedArtifactStager {
   static func stageTrace(source: URL, into stagingRoot: URL) throws -> URL {
     let sourceValues = try source.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-    let rootValues = try stagingRoot.resourceValues(forKeys: [
-      .isDirectoryKey, .isSymbolicLinkKey,
-    ])
     guard source.pathExtension == "trace", sourceValues.isDirectory == true,
       sourceValues.isSymbolicLink != true
     else { throw SelectedArtifactStageError.invalidSource }
+
+    let descriptor = open(source.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+    guard descriptor >= 0 else { throw SelectedArtifactStageError.invalidSource }
+    defer { close(descriptor) }
+    return try stageDirectory(
+      sourceDescriptor: descriptor, pathExtension: "trace", into: stagingRoot)
+  }
+
+  static func stageDirectory(
+    sourceDescriptor: Int32,
+    pathExtension: String,
+    into stagingRoot: URL
+  ) throws -> URL {
+    guard pathExtension == "trace" || pathExtension == "logarchive" else {
+      throw SelectedArtifactStageError.invalidSource
+    }
+    var sourceMetadata = stat()
+    guard fstat(sourceDescriptor, &sourceMetadata) == 0,
+      (sourceMetadata.st_mode & S_IFMT) == S_IFDIR
+    else { throw SelectedArtifactStageError.invalidSource }
+
+    let rootValues = try stagingRoot.resourceValues(forKeys: [
+      .isDirectoryKey, .isSymbolicLinkKey,
+    ])
     guard rootValues.isDirectory == true, rootValues.isSymbolicLink != true else {
       throw SelectedArtifactStageError.invalidRoot
     }
-    // FileManager may enumerate the canonical `/private/var/...` spelling even when
-    // the selected URL arrived through `/var/...`. Use filesystem identity before
-    // deriving relative paths so an alias cannot manufacture a partial component.
-    let canonicalSource = try canonicalExistingURL(source)
     let canonicalStagingRoot = try canonicalExistingURL(stagingRoot)
-    let destination = canonicalStagingRoot
+    let destination =
+      canonicalStagingRoot
       .appendingPathComponent(UUID().uuidString.lowercased(), isDirectory: true)
-      .appendingPathExtension("trace")
+      .appendingPathExtension(pathExtension)
     try FileManager.default.createDirectory(
       at: destination, withIntermediateDirectories: false,
       attributes: [.posixPermissions: 0o700])
     do {
-      try copyTree(source: canonicalSource, destination: destination)
+      var state = CopyState()
+      try copyDirectory(
+        sourceDescriptor: sourceDescriptor,
+        destination: destination,
+        relativePrefix: "",
+        state: &state)
+      var after = stat()
+      guard fstat(sourceDescriptor, &after) == 0, stable(sourceMetadata, after) else {
+        throw SelectedArtifactStageError.changedDuringRead
+      }
       return destination
     } catch {
       try? FileManager.default.removeItem(at: destination)
@@ -44,100 +71,154 @@ enum SelectedArtifactStager {
     }
   }
 
-  private static func copyTree(source: URL, destination: URL) throws {
-    var enumerationFailed = false
-    guard
-      let enumerator = FileManager.default.enumerator(
-        at: source,
-        includingPropertiesForKeys: [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey],
-        options: [],
-        errorHandler: { _, _ in
-          enumerationFailed = true
-          return false
-        })
-    else { throw SelectedArtifactStageError.invalidSource }
-    var directories: [(String, URL)] = []
-    var files: [(String, URL)] = []
+  private struct CopyState {
+    var entryCount = 0
+    var totalBytes: UInt64 = 0
     var foldedPaths = Set<String>()
-    for case let url as URL in enumerator {
-      guard directories.count + files.count < SelectedArtifactHasher.maximumFiles else {
+  }
+
+  private static func copyDirectory(
+    sourceDescriptor: Int32,
+    destination: URL,
+    relativePrefix: String,
+    state: inout CopyState
+  ) throws {
+    let enumerationDescriptor = openat(
+      sourceDescriptor, ".", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+    guard enumerationDescriptor >= 0 else { throw SelectedArtifactStageError.invalidSource }
+    guard let directory = fdopendir(enumerationDescriptor) else {
+      close(enumerationDescriptor)
+      throw SelectedArtifactStageError.invalidSource
+    }
+    defer { closedir(directory) }
+
+    var names: [String] = []
+    while let entry = readdir(directory) {
+      let name = withUnsafePointer(to: &entry.pointee.d_name) { pointer in
+        pointer.withMemoryRebound(to: CChar.self, capacity: Int(NAME_MAX) + 1) {
+          String(validatingCString: $0)
+        }
+      }
+      guard let name else { throw SelectedArtifactStageError.invalidRelativePath }
+      if name == "." || name == ".." { continue }
+      names.append(name)
+    }
+    names.sort { $0.utf8.lexicographicallyPrecedes($1.utf8) }
+
+    let directoryDescriptor = dirfd(directory)
+    for name in names {
+      guard state.entryCount < SelectedArtifactHasher.maximumFiles else {
         throw SelectedArtifactStageError.tooManyEntries
       }
-      let values = try url.resourceValues(forKeys: [
-        .isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey,
-      ])
-      guard values.isSymbolicLink != true else {
-        throw SelectedArtifactStageError.unsupportedFileType
-      }
-      let canonicalURL = try canonicalExistingURL(url)
-      let prefix = source.path + "/"
-      guard canonicalURL.path.hasPrefix(prefix) else {
-        throw SelectedArtifactStageError.invalidRelativePath
-      }
-      let relative = String(canonicalURL.path.dropFirst(prefix.count))
+      state.entryCount += 1
+      let relative = relativePrefix.isEmpty ? name : "\(relativePrefix)/\(name)"
       guard !relative.isEmpty,
         relative.utf8.count <= SelectedArtifactHasher.maximumRelativePathBytes,
         !relative.split(separator: "/").contains("..")
       else { throw SelectedArtifactStageError.invalidRelativePath }
       let folded = relative.precomposedStringWithCanonicalMapping.folding(
         options: [.caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
-      guard foldedPaths.insert(folded).inserted else {
+      guard state.foldedPaths.insert(folded).inserted else {
         throw SelectedArtifactStageError.caseCollision
       }
-      if values.isDirectory == true {
-        directories.append((relative, canonicalURL))
-      } else if values.isRegularFile == true {
-        files.append((relative, canonicalURL))
-      } else {
+
+      var before = stat()
+      let statResult = name.withCString {
+        fstatat(directoryDescriptor, $0, &before, AT_SYMLINK_NOFOLLOW)
+      }
+      guard statResult == 0 else { throw SelectedArtifactStageError.unsupportedFileType }
+      let destinationURL = destination.appendingPathComponent(
+        relative, isDirectory: (before.st_mode & S_IFMT) == S_IFDIR)
+      switch before.st_mode & S_IFMT {
+      case S_IFDIR:
+        let childDescriptor = name.withCString {
+          openat(directoryDescriptor, $0, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+        }
+        guard childDescriptor >= 0 else {
+          throw SelectedArtifactStageError.unsupportedFileType
+        }
+        defer { close(childDescriptor) }
+        var opened = stat()
+        guard fstat(childDescriptor, &opened) == 0, stable(before, opened) else {
+          throw SelectedArtifactStageError.changedDuringRead
+        }
+        try FileManager.default.createDirectory(
+          at: destinationURL,
+          withIntermediateDirectories: false,
+          attributes: [.posixPermissions: 0o700])
+        try copyDirectory(
+          sourceDescriptor: childDescriptor,
+          destination: destination,
+          relativePrefix: relative,
+          state: &state)
+        var after = stat()
+        guard fstat(childDescriptor, &after) == 0, stable(opened, after) else {
+          throw SelectedArtifactStageError.changedDuringRead
+        }
+      case S_IFREG:
+        try copyRegularFile(
+          parentDescriptor: directoryDescriptor,
+          name: name,
+          before: before,
+          destination: destinationURL,
+          state: &state)
+      default:
         throw SelectedArtifactStageError.unsupportedFileType
       }
     }
-    guard !enumerationFailed else { throw SelectedArtifactStageError.invalidSource }
-    directories.sort {
-      let leftDepth = $0.0.split(separator: "/").count
-      let rightDepth = $1.0.split(separator: "/").count
-      return leftDepth == rightDepth ? $0.0 < $1.0 : leftDepth < rightDepth
+  }
+
+  private static func copyRegularFile(
+    parentDescriptor: Int32,
+    name: String,
+    before: stat,
+    destination: URL,
+    state: inout CopyState
+  ) throws {
+    let sourceDescriptor = name.withCString {
+      openat(parentDescriptor, $0, O_RDONLY | O_NOFOLLOW | O_CLOEXEC)
     }
-    for (relative, _) in directories {
-      try FileManager.default.createDirectory(
-        at: destination.appendingPathComponent(relative, isDirectory: true),
-        withIntermediateDirectories: false,
-        attributes: [.posixPermissions: 0o700])
+    guard sourceDescriptor >= 0 else { throw SelectedArtifactStageError.unsupportedFileType }
+    defer { close(sourceDescriptor) }
+    var metadata = stat()
+    guard fstat(sourceDescriptor, &metadata) == 0, (metadata.st_mode & S_IFMT) == S_IFREG,
+      metadata.st_size >= 0, stable(before, metadata)
+    else { throw SelectedArtifactStageError.changedDuringRead }
+    let size = UInt64(metadata.st_size)
+    let (nextTotal, overflow) = state.totalBytes.addingReportingOverflow(size)
+    guard !overflow, nextTotal <= SelectedArtifactHasher.maximumBytes else {
+      throw SelectedArtifactStageError.artifactTooLarge
     }
-    files.sort { $0.0.utf8.lexicographicallyPrecedes($1.0.utf8) }
-    var totalBytes: UInt64 = 0
-    for (relative, sourceFile) in files {
-      let destinationFile = destination.appendingPathComponent(relative, isDirectory: false)
-      let sourceDescriptor = open(sourceFile.path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC)
-      guard sourceDescriptor >= 0 else { throw SelectedArtifactStageError.unsupportedFileType }
-      defer { close(sourceDescriptor) }
-      var metadata = stat()
-      guard fstat(sourceDescriptor, &metadata) == 0, (metadata.st_mode & S_IFMT) == S_IFREG,
-        metadata.st_size >= 0
-      else { throw SelectedArtifactStageError.unsupportedFileType }
-      let size = UInt64(metadata.st_size)
-      let (nextTotal, overflow) = totalBytes.addingReportingOverflow(size)
-      guard !overflow, nextTotal <= SelectedArtifactHasher.maximumBytes else {
-        throw SelectedArtifactStageError.artifactTooLarge
-      }
-      totalBytes = nextTotal
-      let destinationDescriptor = open(
-        destinationFile.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0o600)
-      guard destinationDescriptor >= 0 else {
-        throw SelectedArtifactStageError.unsupportedFileType
-      }
-      defer { close(destinationDescriptor) }
-      let sourceHandle = FileHandle(fileDescriptor: sourceDescriptor, closeOnDealloc: false)
-      let destinationHandle = FileHandle(fileDescriptor: destinationDescriptor, closeOnDealloc: false)
-      var copied: UInt64 = 0
-      while let chunk = try sourceHandle.read(upToCount: 1024 * 1024), !chunk.isEmpty {
-        copied += UInt64(chunk.count)
-        guard copied <= size else { throw SelectedArtifactStageError.changedDuringRead }
-        try destinationHandle.write(contentsOf: chunk)
-      }
-      guard copied == size else { throw SelectedArtifactStageError.changedDuringRead }
-      try destinationHandle.synchronize()
+    state.totalBytes = nextTotal
+    let destinationDescriptor = open(
+      destination.path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0o600)
+    guard destinationDescriptor >= 0 else {
+      throw SelectedArtifactStageError.unsupportedFileType
     }
+    defer { close(destinationDescriptor) }
+    let sourceHandle = FileHandle(fileDescriptor: sourceDescriptor, closeOnDealloc: false)
+    let destinationHandle = FileHandle(fileDescriptor: destinationDescriptor, closeOnDealloc: false)
+    var copied: UInt64 = 0
+    while let chunk = try sourceHandle.read(upToCount: 1024 * 1024), !chunk.isEmpty {
+      copied += UInt64(chunk.count)
+      guard copied <= size else { throw SelectedArtifactStageError.changedDuringRead }
+      try destinationHandle.write(contentsOf: chunk)
+    }
+    guard copied == size else { throw SelectedArtifactStageError.changedDuringRead }
+    var after = stat()
+    guard fstat(sourceDescriptor, &after) == 0, stable(metadata, after)
+    else { throw SelectedArtifactStageError.changedDuringRead }
+    try destinationHandle.synchronize()
+  }
+
+  private static func stable(_ left: stat, _ right: stat) -> Bool {
+    left.st_dev == right.st_dev && left.st_ino == right.st_ino
+      && (left.st_mode & S_IFMT) == (right.st_mode & S_IFMT)
+      && left.st_size == right.st_size
+      && left.st_mtimespec.tv_sec == right.st_mtimespec.tv_sec
+      && left.st_mtimespec.tv_nsec == right.st_mtimespec.tv_nsec
+      && left.st_ctimespec.tv_sec == right.st_ctimespec.tv_sec
+      && left.st_ctimespec.tv_nsec == right.st_ctimespec.tv_nsec
   }
 
   private static func canonicalExistingURL(_ url: URL) throws -> URL {

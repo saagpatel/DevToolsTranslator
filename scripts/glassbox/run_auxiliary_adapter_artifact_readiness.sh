@@ -31,6 +31,7 @@ fi
 GLASSBOX_CODESIGN_IDENTITY="$IDENTITY" "$ROOT/script/build_otlp_adapter.sh" --stage-only >/dev/null
 GLASSBOX_CODESIGN_IDENTITY="$IDENTITY" "$ROOT/script/build_passive_context_adapter.sh" --stage-only >/dev/null
 GLASSBOX_CODESIGN_IDENTITY="$IDENTITY" "$ROOT/script/build_process_context_adapter.sh" --stage-only >/dev/null
+GLASSBOX_CODESIGN_IDENTITY="$IDENTITY" "$ROOT/script/build_instruments_adapter.sh" --stage-only >/dev/null
 
 package_dmg() {
   local app_name="$1"
@@ -46,6 +47,7 @@ package_dmg() {
 package_dmg "Glassbox OTLP Adapter.app" "Glassbox OTLP Adapter" "Glassbox-OTLP-Adapter-0.1.0.dmg"
 package_dmg "Glassbox Passive Context.app" "Glassbox Passive Context" "Glassbox-Passive-Context-0.1.0.dmg"
 package_dmg "Glassbox Process Context.app" "Glassbox Process Context" "Glassbox-Process-Context-0.1.0.dmg"
+package_dmg "Glassbox Instruments Adapter.app" "Glassbox Instruments Adapter" "Glassbox-Instruments-Adapter-0.1.0.dmg"
 
 python3 "$ROOT/scripts/glassbox/verify_auxiliary_adapters.py" \
   --root "$ROOT" --receipt "$RECEIPT" --mode readiness

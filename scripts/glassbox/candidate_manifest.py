@@ -18,6 +18,12 @@ ARTIFACT_SPECS = {
     "core_app_binary": ("file", "dist/Glassbox.app/Contents/MacOS/Glassbox"),
     "core_evidence_helper": ("file", "dist/Glassbox.app/Contents/Helpers/glassbox-native-bridge"),
     "core_dmg": ("file", "dist/Glassbox-0.1.0.dmg"),
+    "instruments_adapter_bundle": ("tree", "dist/Glassbox Instruments Adapter.app"),
+    "instruments_adapter_binary": (
+        "file",
+        "dist/Glassbox Instruments Adapter.app/Contents/MacOS/GlassboxInstrumentsAdapter",
+    ),
+    "instruments_adapter_dmg": ("file", "dist/Glassbox-Instruments-Adapter-0.1.0.dmg"),
     "browser_adapter_bundle": ("tree", "dist/Glassbox Browser Adapter.app"),
     "browser_adapter_binary": ("file", "dist/Glassbox Browser Adapter.app/Contents/MacOS/GlassboxBrowserAdapter"),
     "browser_host": ("file", "dist/Glassbox Browser Adapter.app/Contents/Helpers/glassbox-browser-host"),

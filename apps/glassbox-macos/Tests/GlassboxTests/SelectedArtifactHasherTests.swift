@@ -14,6 +14,7 @@ import Testing
   let second = root.appendingPathComponent("nested/b")
   try Data("two".utf8).write(to: second)
   let first = try SelectedArtifactHasher.sha256(directory: root)
+  #expect(first == "1c1da5cb94a3adfc8850858c54f81d750f23c5fe219868f815b5e2a3c7694694")
   #expect(first == (try SelectedArtifactHasher.sha256(directory: root)))
   try Data("changed".utf8).write(to: second)
   #expect(first != (try SelectedArtifactHasher.sha256(directory: root)))

@@ -17,7 +17,7 @@ Continue only when the receipt reports `"ok": true`. The verifier rejects unexpe
 ## 2. Keep the candidate immutable
 
 - Do not rebuild, re-sign, repackage, or staple anything in the kit.
-- Install only from the five supplied DMGs and the supplied browser-extension ZIP.
+- Install only from the six supplied DMGs and the supplied browser-extension ZIP.
 - Work from a fresh supported macOS VM with no prior Glassbox installation, containers, helper state, browser extension, Native Messaging manifest, or adapter Application Support directory.
 - Record macOS and stable Chrome versions without machine identifiers, usernames, browser history, credentials, raw URLs, request bodies, or unrelated user data.
 
@@ -28,7 +28,7 @@ Copy the templates out of the immutable kit before filling them. Complete only c
 - Core install/update/downgrade/revoke/reset/uninstall/reinstall: `templates/LIFECYCLE-EVIDENCE.template.json`
 - Core keyboard, VoiceOver, reduced-motion, zoom, and disclosure review: `templates/ACCESSIBILITY-EVIDENCE.template.json`
 - Browser adapter and Chrome workflow: `templates/BROWSER-RELEASE-EVIDENCE.md` and `templates/browser/fresh-vm-evidence-template.json`
-- OTLP, passive-context, and process-context adapters: `templates/AUXILIARY-ADAPTER-RELEASE-EVIDENCE.md` and `templates/AUXILIARY-ADAPTER-EVIDENCE.template.json`
+- OTLP, passive-context, process-context, and Instruments adapters: `templates/AUXILIARY-ADAPTER-RELEASE-EVIDENCE.md` and `templates/AUXILIARY-ADAPTER-EVIDENCE.template.json`
 
 Every evidence document must bind the candidate-manifest digest and the exact artifact hashes it names. A reviewer with the approved role and CA must inspect the primary evidence and produce an attached DER CMS envelope. Self-attestation by the build operator is not independent review.
 

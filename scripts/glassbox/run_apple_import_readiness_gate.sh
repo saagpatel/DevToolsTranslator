@@ -7,18 +7,24 @@ TEMP="$(mktemp -d "${TMPDIR:-/tmp}/glassbox-apple-import.XXXXXX")"
 trap 'rm -rf "$TEMP"' EXIT
 
 swift test --package-path "$ROOT/apps/glassbox-macos" >"$TEMP/swift-test.log" 2>&1
-if grep -q 'warning:' "$TEMP/swift-test.log"; then
+swift test --package-path "$ROOT/apps/glassbox-instruments-adapter-macos" \
+  >"$TEMP/instruments-swift-test.log" 2>&1
+if grep -q 'warning:' "$TEMP/swift-test.log" "$TEMP/instruments-swift-test.log"; then
   echo "Swift Apple import build emitted warnings" >&2
   exit 1
 fi
 if [[ -z "${GLASSBOX_CANDIDATE_MANIFEST:-}" ]]; then
   "$ROOT/script/build_and_run.sh" --stage-only >/dev/null
+  "$ROOT/script/build_instruments_adapter.sh" --stage-only >/dev/null
 fi
 APP="$ROOT/dist/Glassbox.app"
 BIN="$APP/Contents/MacOS/Glassbox"
+INSTRUMENTS_APP="$ROOT/dist/Glassbox Instruments Adapter.app"
+INSTRUMENTS_BIN="$INSTRUMENTS_APP/Contents/MacOS/GlassboxInstrumentsAdapter"
 mkdir "$TEMP/invalid.logarchive"
 
-python3 - "$ROOT" "$APP" "$BIN" "$TEMP/invalid.logarchive" "$RECEIPT" <<'PY'
+python3 - "$ROOT" "$APP" "$BIN" "$INSTRUMENTS_APP" "$INSTRUMENTS_BIN" \
+  "$TEMP/invalid.logarchive" "$RECEIPT" <<'PY'
 import hashlib
 import json
 import os
@@ -29,7 +35,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-root, app, binary, invalid_archive, receipt = map(Path, sys.argv[1:])
+root, app, binary, instruments_app, instruments_binary, invalid_archive, receipt = map(Path, sys.argv[1:])
 bridge = app / "Contents/Helpers/glassbox-native-bridge"
 
 def run(args, timeout=10, **kwargs):
@@ -64,10 +70,25 @@ try:
     entitlements = plistlib.loads(entitlements_text[xml_start:xml_end].encode())
 except (ValueError, plistlib.InvalidFileException):
     entitlements = {}
+instruments_entitlements_run = run([
+    "codesign", "-d", "--entitlements", ":-", str(instruments_app),
+])
+instruments_entitlements_text = (
+    instruments_entitlements_run.stdout + instruments_entitlements_run.stderr
+)
+try:
+    xml_start = instruments_entitlements_text.index("<?xml")
+    xml_end = instruments_entitlements_text.index("</plist>", xml_start) + len("</plist>")
+    instruments_entitlements = plistlib.loads(
+        instruments_entitlements_text[xml_start:xml_end].encode()
+    )
+except (ValueError, plistlib.InvalidFileException):
+    instruments_entitlements = {}
 nm = run(["nm", "-u", str(binary)])
 projector_source = (root / "apps/glassbox-macos/Sources/Glassbox/Services/AppleLogArchiveProjector.swift").read_text()
 stager_source = (root / "apps/glassbox-macos/Sources/Glassbox/Services/SelectedArtifactStager.swift").read_text()
-instruments_source = (root / "apps/glassbox-macos/Sources/Glassbox/Services/InstrumentsTraceAdapter.swift").read_text()
+instruments_source = (root / "apps/glassbox-instruments-adapter-macos/Sources/GlassboxInstrumentsAdapter/Services/InstrumentsConversionService.swift").read_text()
+instruments_app_source = (root / "apps/glassbox-instruments-adapter-macos/Sources/GlassboxInstrumentsAdapter/App/GlassboxInstrumentsAdapterApp.swift").read_text()
 app_source = (root / "apps/glassbox-macos/Sources/Glassbox/App/GlassboxApp.swift").read_text()
 projection_bytes = (root / "crates/glassbox-fixtures/corpus/hostile-import/apple-log/valid.ndjson").read_bytes()
 projection_digest = hashlib.sha256(projection_bytes).hexdigest()
@@ -95,6 +116,10 @@ executables = []
 for path in app.rglob("*"):
     if path.is_file() and os.access(path, os.X_OK):
         executables.append(str(path.relative_to(app)))
+instruments_executables = []
+for path in instruments_app.rglob("*"):
+    if path.is_file() and os.access(path, os.X_OK):
+        instruments_executables.append(str(path.relative_to(instruments_app)))
 
 checks = {
     "swift_contract_tests_pass": True,
@@ -123,12 +148,29 @@ checks = {
         "O_NOFOLLOW", "O_EXCL", "maximumFiles", "maximumBytes",
         "caseCollision", "removeItem(at: destination)", "realpath(path, nil)",
     )),
-    "signed_instruments_child_mode_is_handle_in_har_out_and_sanitized": (
-        "--glassbox-instruments-har-project" in app_source
+    "core_does_not_embed_or_launch_instruments_adapter": (
+        "--glassbox-instruments-har-project" not in app_source
+        and "xctrace" not in app_source
+        and "Glassbox Instruments Adapter" not in app_source
+    ),
+    "signed_instruments_adapter_is_separate_entitlement_free_and_single_executable": (
+        instruments_entitlements == {}
+        and instruments_executables == ["Contents/MacOS/GlassboxInstrumentsAdapter"]
+        and app.resolve() not in instruments_app.resolve().parents
+        and instruments_app.resolve() not in app.resolve().parents
+    ),
+    "signed_instruments_adapter_is_handle_in_har_out_and_sanitized": (
+        "--glassbox-instruments-har-project" in instruments_app_source
         and all(token in instruments_source for token in (
-            "fcntl(STDIN_FILENO, F_GETPATH", "SelectedArtifactStager.stageTrace",
-            "InstrumentsTraceAdapter.discover()", "exportNetworkHAR",
-            "FileHandle.standardOutput.write", "instruments-projector: trace rejected",
+            "InstrumentsTraceStager.stage", "expectedSourceHash",
+            "GLASSBOX_SOURCE_ARTIFACT_SHA256", "discoverXCTrace()",
+            "--har", "to: .standardOutput", "instruments-adapter: trace rejected",
+        ))
+        and all(token in (
+            root / "apps/glassbox-instruments-adapter-macos/Sources/GlassboxInstrumentsAdapter/Services/InstrumentsTraceStager.swift"
+        ).read_text() for token in (
+            "openat", "fstatat", "AT_SYMLINK_NOFOLLOW", "O_NOFOLLOW", "O_EXCL",
+            "maximumEntries", "maximumBytes", "stable(", "glassbox-selected-directory-v1",
         ))
         and "CommandLine.arguments" not in instruments_source
     ),
@@ -158,6 +200,7 @@ result = {
     "git_dirty": bool(git("status", "--porcelain")),
     "checks": checks,
     "signed_app_sha256": sha(binary),
+    "instruments_adapter_sha256": sha(instruments_binary),
     "xctrace_version": version.stdout.strip() if version and version.returncode == 0 else None,
     "logarchive_import_enabled": False,
     "instruments_import_enabled": False,
@@ -186,7 +229,8 @@ if [[ "$provided" -eq 5 ]]; then
   cp "$RECEIPT" "$TEMP/local-readiness.json"
   python3 "$ROOT/scripts/glassbox/apple_import_promotion.py" \
     --root "$ROOT" --candidate-manifest "$GLASSBOX_CANDIDATE_MANIFEST" \
-    --app "$APP" --local-receipt "$TEMP/local-readiness.json" \
+    --app "$APP" --instruments-adapter "$INSTRUMENTS_APP" \
+    --local-receipt "$TEMP/local-readiness.json" \
     --logarchive "$GLASSBOX_APPLE_LOGARCHIVE_CORPUS" --trace "$GLASSBOX_APPLE_TRACE_CORPUS" \
     --review-cms "$GLASSBOX_APPLE_CORPUS_REVIEW_CMS" --reviewer-ca "$GLASSBOX_APPLE_CORPUS_REVIEWER_CA" \
     --receipt "$RECEIPT" >/dev/null

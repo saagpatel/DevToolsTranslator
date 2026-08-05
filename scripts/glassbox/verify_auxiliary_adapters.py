@@ -51,11 +51,17 @@ ADAPTERS = {
         "helper": "glassbox-process-context-broker",
         "entitlements": {},
     },
+    "instruments": {
+        "app": "dist/Glassbox Instruments Adapter.app",
+        "dmg": "dist/Glassbox-Instruments-Adapter-0.1.0.dmg",
+        "bundle_id": "com.glassbox.instruments-adapter",
+        "binary": "GlassboxInstrumentsAdapter",
+        "helper": None,
+        "entitlements": {},
+    },
 }
-CHECKS = {"fresh_vm_confirmed"} | {
-    f"{name}_{check}"
-    for name in ADAPTERS
-    for check in (
+WORKFLOW_CHECKS = {
+    name: (
         "gatekeeper_install",
         "explicit_consent",
         "capture_and_stop",
@@ -63,12 +69,25 @@ CHECKS = {"fresh_vm_confirmed"} | {
         "uninstall_no_residue",
         "keyboard_voiceover_disclosure",
     )
+    for name in ("otlp", "passive", "process")
+}
+WORKFLOW_CHECKS["instruments"] = (
+    "gatekeeper_install",
+    "explicit_trace_selection",
+    "conversion_and_core_import",
+    "unavailable_cancel_and_cleanup",
+    "uninstall_no_residue",
+    "keyboard_voiceover_disclosure",
+)
+CHECKS = {"fresh_vm_confirmed"} | {
+    f"{name}_{check}" for name, checks in WORKFLOW_CHECKS.items() for check in checks
 }
 ATTACHMENTS = {
     "artifact_identity",
     "otlp_workflow",
     "passive_workflow",
     "process_workflow",
+    "instruments_workflow",
     "reset_uninstall_accessibility",
 }
 
@@ -233,38 +252,58 @@ def main() -> int:
         info = plistlib.loads(info_path.read_bytes()) if info_path.is_file() else {}
         privacy = plistlib.loads(privacy_path.read_bytes()) if privacy_path.is_file() else {}
         binary = app / "Contents/MacOS" / str(spec["binary"])
-        helper = app / "Contents/Helpers" / str(spec["helper"])
+        helper_name = spec["helper"]
+        helper = (
+            app / "Contents/Helpers" / str(helper_name)
+            if isinstance(helper_name, str) else None
+        )
         app_entitlements, app_signing = signing(app)
-        helper_entitlements, helper_signing = signing(helper)
+        helper_entitlements, helper_signing = signing(helper) if helper else ({}, "")
         app_verify = run("codesign", "--verify", "--deep", "--strict", str(app))
-        helper_verify = run("codesign", "--verify", "--strict", str(helper))
+        helper_verify_ok = (
+            run("codesign", "--verify", "--strict", str(helper)).returncode == 0
+            if helper else True
+        )
         dmg_sign = run("codesign", "--verify", "--strict", str(dmg))
         dmg_verify = run("hdiutil", "verify", str(dmg))
         app_staple = run("xcrun", "stapler", "validate", str(app))
         dmg_staple = run("xcrun", "stapler", "validate", str(dmg))
         gatekeeper = run("spctl", "-a", "-vvv", "--type", "execute", str(app))
+        bundle_members = list(app.rglob("*")) if app.is_dir() else []
         executables = sorted(
             path.relative_to(app).as_posix() for path in app.rglob("*")
-            if path.is_file() and path.stat().st_mode & 0o111
+            if not path.is_symlink() and path.is_file() and path.stat().st_mode & 0o111
         ) if app.is_dir() else []
-        expected_executables = sorted([
-            f"Contents/MacOS/{spec['binary']}", f"Contents/Helpers/{spec['helper']}",
-        ])
+        expected_executables = [f"Contents/MacOS/{spec['binary']}"]
+        if helper_name:
+            expected_executables.append(f"Contents/Helpers/{helper_name}")
+        expected_executables.sort()
         local_checks.update({
-            f"{name}_artifacts_exist": app.is_dir() and dmg.is_file(),
+            f"{name}_artifacts_exist": (
+                app.is_dir() and not app.is_symlink()
+                and dmg.is_file() and not dmg.is_symlink()
+            ),
+            f"{name}_bundle_link_free": not any(
+                path.is_symlink() for path in bundle_members
+            ),
             f"{name}_bundle_identity_exact": (
                 info.get("CFBundleIdentifier") == spec["bundle_id"]
                 and info.get("CFBundleExecutable") == spec["binary"]
                 and info.get("CFBundleShortVersionString") == "0.1.0"
             ),
             f"{name}_developer_id_runtime_signatures": (
-                app_verify.returncode == 0 and helper_verify.returncode == 0
+                app_verify.returncode == 0 and helper_verify_ok
                 and f"TeamIdentifier={TEAM_ID}" in app_signing
-                and f"TeamIdentifier={TEAM_ID}" in helper_signing
                 and "Authority=Developer ID Application:" in app_signing
-                and "Authority=Developer ID Application:" in helper_signing
                 and "flags=0x10000(runtime)" in app_signing
-                and "flags=0x10000(runtime)" in helper_signing
+                and (
+                    helper is None
+                    or (
+                        f"TeamIdentifier={TEAM_ID}" in helper_signing
+                        and "Authority=Developer ID Application:" in helper_signing
+                        and "flags=0x10000(runtime)" in helper_signing
+                    )
+                )
             ),
             f"{name}_entitlements_exact": app_entitlements == spec["entitlements"] and helper_entitlements == {},
             f"{name}_two_executable_closure": executables == expected_executables,
@@ -285,7 +324,7 @@ def main() -> int:
             dmg_hashes[f"{name}_dmg_sha256"] = sha256(dmg)
         artifacts[name] = {
             "app_binary_sha256": sha256(binary) if binary.is_file() else None,
-            "helper_sha256": sha256(helper) if helper.is_file() else None,
+            "helper_sha256": sha256(helper) if helper and helper.is_file() else None,
             "dmg_sha256": sha256(dmg) if dmg.is_file() else None,
         }
         gatekeeper_output[name] = (gatekeeper.stdout + gatekeeper.stderr).strip()
@@ -317,8 +356,8 @@ def main() -> int:
         "stapler_output": stapler_output,
         "errors": [name for name, value in {**local_checks, **release_checks}.items() if not value],
         "external_requirements": [] if promoted else [
-            "notarize and staple the exact OTLP, passive-context, and process-context app bundles and DMGs",
-            "run Gatekeeper and fresh-VM consent, capture, stop, revoke, reset, uninstall, residue, keyboard, VoiceOver, and disclosure review for all three adapters",
+            "notarize and staple the exact OTLP, passive-context, process-context, and Instruments app bundles and DMGs",
+            "run Gatekeeper and fresh-VM consent/selection, capture/conversion, stop/cancel, revoke/reset, uninstall, residue, keyboard, VoiceOver, and disclosure review for all four adapters",
             "rerun strict verification with the frozen candidate manifest and CA-verified reviewer CMS",
         ],
     }

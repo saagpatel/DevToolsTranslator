@@ -204,19 +204,27 @@ enum AppleLogProjectionCommand {
     }
     let decodedPath = String(
       decoding: path.prefix(while: { $0 != 0 }).map { UInt8(bitPattern: $0) }, as: UTF8.self)
-    let archiveURL = URL(fileURLWithPath: decodedPath, isDirectory: true)
+    guard URL(fileURLWithPath: decodedPath, isDirectory: true).pathExtension == "logarchive" else {
+      writeError("apple-log-projector: selected object is not a log archive directory\n")
+      return 2
+    }
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent(
+        "glassbox-apple-log-\(UUID().uuidString.lowercased())", isDirectory: true)
     do {
-      let values = try archiveURL.resourceValues(forKeys: [
-        .isDirectoryKey, .isSymbolicLinkKey,
-      ])
-      guard archiveURL.pathExtension == "logarchive", values.isDirectory == true,
-        values.isSymbolicLink != true
-      else {
-        writeError("apple-log-projector: selected object is not a log archive directory\n")
-        return 2
+      try FileManager.default.createDirectory(
+        at: root, withIntermediateDirectories: false,
+        attributes: [.posixPermissions: 0o700])
+      defer { try? FileManager.default.removeItem(at: root) }
+      let stagedArchive = try SelectedArtifactStager.stageDirectory(
+        sourceDescriptor: STDIN_FILENO,
+        pathExtension: "logarchive",
+        into: root)
+      guard try SelectedArtifactHasher.sha256(directory: stagedArchive) == sourceHash else {
+        throw AppleLogProjectionError.invalidSourceHash
       }
       try AppleLogArchiveProjector.project(
-        archiveURL: archiveURL,
+        archiveURL: stagedArchive,
         sourceArtifactSHA256: sourceHash,
         to: .standardOutput)
       return 0
