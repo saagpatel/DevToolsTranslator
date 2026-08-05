@@ -5,6 +5,62 @@ OUT="${1:-$ROOT/artifacts/glassbox-program-readiness.json}"
 RECEIPTS="${2:-$ROOT/artifacts/glassbox-program-readiness-receipts}"
 mkdir -p "$RECEIPTS"
 
+# Once a frozen candidate is supplied, no local gate may rebuild, re-sign, or
+# repackage dist/. Reuse only the exact current clean source-bound local
+# receipts, require the complete Gate 1-6 external set up front, and execute
+# verify-only promotion paths against the frozen bytes.
+if [[ -n "${GLASSBOX_CANDIDATE_MANIFEST:-}" ]]; then
+  REQUIRED_PROMOTION_VARIABLES=(
+    GLASSBOX_KEY_PROVISIONING_PROFILE
+    GLASSBOX_APPLE_LOGARCHIVE_CORPUS
+    GLASSBOX_APPLE_TRACE_CORPUS
+    GLASSBOX_APPLE_CORPUS_REVIEW_CMS
+    GLASSBOX_APPLE_CORPUS_REVIEWER_CA
+    GLASSBOX_ACCESSIBILITY_REVIEW_CMS
+    GLASSBOX_ACCESSIBILITY_REVIEWER_CA
+    GLASSBOX_BROWSER_FRESH_VM_CMS
+    GLASSBOX_BROWSER_REVIEWER_CA
+    GLASSBOX_AUXILIARY_FRESH_VM_CMS
+    GLASSBOX_AUXILIARY_REVIEWER_CA
+    GLASSBOX_LIFECYCLE_LOCAL_RECEIPT
+    GLASSBOX_LIFECYCLE_EVIDENCE_CMS
+    GLASSBOX_LIFECYCLE_TESTER_CA
+    GLASSBOX_BENCHMARK_STUDY_ARTIFACT
+    GLASSBOX_BENCHMARK_INDEPENDENT_CMS
+    GLASSBOX_BENCHMARK_VERIFIER_CA
+  )
+  for variable in "${REQUIRED_PROMOTION_VARIABLES[@]}"; do
+    if [[ -z "${!variable:-}" ]]; then
+      echo "frozen-candidate composition requires complete Gate 1-6 evidence; missing $variable" >&2
+      exit 2
+    fi
+  done
+
+  PREFLIGHT="$(mktemp "${TMPDIR:-/tmp}/glassbox-candidate-preflight.XXXXXX")"
+  trap 'rm -f "$PREFLIGHT"' EXIT
+  python3 "$ROOT/scripts/glassbox/candidate_manifest.py" \
+    --root "$ROOT" --verify "$GLASSBOX_CANDIDATE_MANIFEST" >/dev/null
+  python3 "$ROOT/scripts/glassbox/program_readiness.py" \
+    --root "$ROOT" --receipts "$RECEIPTS" --receipt "$PREFLIGHT" \
+    --candidate-manifest "$GLASSBOX_CANDIDATE_MANIFEST" >/dev/null
+
+  python3 "$ROOT/scripts/glassbox/check_gate0.py" >"$RECEIPTS/gate0.json"
+  "$ROOT/scripts/glassbox/run_key_lifecycle_readiness.sh" "$RECEIPTS/key_lifecycle.json" >/dev/null
+  "$ROOT/scripts/glassbox/run_apple_import_readiness_gate.sh" "$RECEIPTS/apple_import.json" >/dev/null
+  "$ROOT/scripts/glassbox/run_macos_artifact_readiness.sh" "$RECEIPTS/macos_artifact.json" >/dev/null
+  "$ROOT/scripts/glassbox/run_browser_artifact_readiness.sh" "$RECEIPTS/browser_artifact.json" >/dev/null
+  "$ROOT/scripts/glassbox/run_auxiliary_adapter_artifact_readiness.sh" "$RECEIPTS/auxiliary_adapters.json" >/dev/null
+  "$ROOT/scripts/glassbox/run_lifecycle_gate.sh" "$RECEIPTS/lifecycle.json" >/dev/null
+  "$ROOT/scripts/glassbox/run_accessibility_gate.sh" >"$RECEIPTS/accessibility.json"
+  "$ROOT/scripts/glassbox/run_benchmark_readiness_gate.sh" "$RECEIPTS/benchmark.json" >/dev/null
+  "$ROOT/scripts/glassbox/run_retirement_readiness_gate.sh" "$RECEIPTS/retirement.json" >/dev/null
+
+  python3 "$ROOT/scripts/glassbox/program_readiness.py" \
+    --root "$ROOT" --receipts "$RECEIPTS" --receipt "$OUT" \
+    --candidate-manifest "$GLASSBOX_CANDIDATE_MANIFEST"
+  exit $?
+fi
+
 set +e
 python3 "$ROOT/scripts/glassbox/check_gate0.py" >"$RECEIPTS/gate0.json"
 GATE0_STATUS=$?
