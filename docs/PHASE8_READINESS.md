@@ -4,9 +4,9 @@ Date: 2026-02-22
 Last verified: 2026-02-22
 
 > Superseded by Phase 9 closeout on 2026-02-22.  
-> See `/Users/d/Projects/DevToolsTranslator/docs/PHASE9_HARDENING_REPORT.md` for current release-readiness status.
+> See `~/Projects/DevToolsTranslator/docs/PHASE9_HARDENING_REPORT.md` for current release-readiness status.
 > Superseded again by Phase 10 release operationalization on 2026-02-22.  
-> See `/Users/d/Projects/DevToolsTranslator/docs/PHASE10_RELEASE_REPORT.md` for release packaging + inspect status.
+> See `~/Projects/DevToolsTranslator/docs/PHASE10_RELEASE_REPORT.md` for release packaging + inspect status.
 
 ## Outcome
 - Phase 8 (Export Engine v1.0) is implemented end-to-end.

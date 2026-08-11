@@ -16,7 +16,7 @@ Last verified: 2026-02-22
   - `retention_runs`
   - `bridge_diagnostics`
   - deterministic indexes for diagnostics and retention run history
-- Added storage APIs in `/Users/d/Projects/DevToolsTranslator/crates/dtt-storage/src/lib.rs`:
+- Added storage APIs in `~/Projects/DevToolsTranslator/crates/dtt-storage/src/lib.rs`:
   - `get_retention_policy`
   - `set_retention_policy`
   - `delete_session_with_artifacts`
@@ -28,24 +28,24 @@ Last verified: 2026-02-22
 - Added running-session delete protection (`delete_blocked_running_session`).
 
 ### 2) Runtime hardening (extension + bridge)
-- Extension reconnect behavior in `/Users/d/Projects/DevToolsTranslator/apps/extension-mv3/src/background.ts`:
+- Extension reconnect behavior in `~/Projects/DevToolsTranslator/apps/extension-mv3/src/background.ts`:
   - deterministic reconnect schedule `1s -> 2s -> 5s -> 10s`
   - one `DTT.desktop_disconnect.v1` marker per disconnect episode during active capture
   - idempotent stop path retained
 - Added reconnect utility + test:
-  - `/Users/d/Projects/DevToolsTranslator/apps/extension-mv3/src/reconnect.ts`
-  - `/Users/d/Projects/DevToolsTranslator/apps/extension-mv3/tests/reconnect.test.mjs`
+  - `~/Projects/DevToolsTranslator/apps/extension-mv3/src/reconnect.ts`
+  - `~/Projects/DevToolsTranslator/apps/extension-mv3/tests/reconnect.test.mjs`
 - Desktop WS diagnostics are now persisted (not only in-memory ring):
-  - `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/ws_bridge.rs`
+  - `~/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/ws_bridge.rs`
 
 ### 3) Desktop command + UI hardening for Phase 9 controls
 - Added retention/delete command surface:
-  - `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/lib.rs`
-  - `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/tauri_commands.rs`
+  - `~/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/lib.rs`
+  - `~/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/tauri_commands.rs`
 - Added UI client parity and mock support:
-  - `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/api/client.ts`
+  - `~/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/api/client.ts`
 - Added Settings retention controls + run-retention actions and session delete action:
-  - `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/router.tsx`
+  - `~/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/router.tsx`
 
 ### 4) Phase-wide regression and fixture closure
 - Added retention/deletion/diagnostics tests in storage.
@@ -54,7 +54,7 @@ Last verified: 2026-02-22
 
 ## Validation Evidence
 
-Canonical source: `/Users/d/Projects/DevToolsTranslator/.codex/verify.commands`
+Canonical source: `~/Projects/DevToolsTranslator/.codex/verify.commands`
 
 All required canonical commands were run and passed on 2026-02-22:
 1. `pnpm -r lint`
@@ -91,7 +91,7 @@ Phase 9-specific tests now present and passing in `dtt-storage`:
 
 ## Risks / Follow-ups
 1. Interactive Chrome smoke checklist is still manual and not executable in this shell-only environment.
-- Tracking doc: `/Users/d/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`
+- Tracking doc: `~/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`
 - Release sign-off should run that checklist on a workstation session.
 
 2. Top-20 fixture catalog now has required raw/expected artifacts and gating coverage.
