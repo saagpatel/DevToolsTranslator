@@ -4,13 +4,13 @@
 > phase order used in execution runs, where Phase 6 is MV3 capture + desktop
 > pairing transport. This document keeps historical numbering for reference.
 >
-> Hardening closeout status is tracked in `/Users/d/Projects/DevToolsTranslator/docs/PHASE9_HARDENING_REPORT.md`.
+> Hardening closeout status is tracked in `~/Projects/DevToolsTranslator/docs/PHASE9_HARDENING_REPORT.md`.
 >
-> Phase 10 operationalization evidence is tracked in `/Users/d/Projects/DevToolsTranslator/docs/PHASE10_RELEASE_REPORT.md`.
+> Phase 10 operationalization evidence is tracked in `~/Projects/DevToolsTranslator/docs/PHASE10_RELEASE_REPORT.md`.
 >
-> Phase 11 multi-platform + reliability/perf evidence is tracked in `/Users/d/Projects/DevToolsTranslator/docs/PHASE11_IMPLEMENTATION_REPORT.md`.
+> Phase 11 multi-platform + reliability/perf evidence is tracked in `~/Projects/DevToolsTranslator/docs/PHASE11_IMPLEMENTATION_REPORT.md`.
 >
-> Phase 12 staged public prerelease + OTLP-optional telemetry + endurance evidence is tracked in `/Users/d/Projects/DevToolsTranslator/docs/PHASE12_RELEASE_PROMOTION_REPORT.md`.
+> Phase 12 staged public prerelease + OTLP-optional telemetry + endurance evidence is tracked in `~/Projects/DevToolsTranslator/docs/PHASE12_RELEASE_PROMOTION_REPORT.md`.
 
 ## Scope
 This plan defines phased delivery order and acceptance criteria for implementing DevTools Translator from scaffold to deterministic release gates.

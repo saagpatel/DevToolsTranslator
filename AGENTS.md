@@ -4,7 +4,7 @@
 
 ## What This Project Is
 
-DevToolsTranslator is an active local project in the /Users/d/Projects portfolio.
+DevToolsTranslator is an active local project in the ~/Projects portfolio.
 
 ## Current State
 

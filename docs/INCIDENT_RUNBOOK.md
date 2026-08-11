@@ -42,7 +42,7 @@ Operational triage for:
 
 ## Common Failure Signatures and Actions
 1. `manual_smoke_missing`
-- action: block non-dry-run promotion and append dated pass evidence in `/Users/d/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`.
+- action: block non-dry-run promotion and append dated pass evidence in `~/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`.
 2. `signing_not_verified` / `notarization_not_verified`
 - action: block promotion, rebuild artifacts, validate signing pipeline secrets and provenance.
 3. `telemetry_export_failed`
@@ -50,7 +50,7 @@ Operational triage for:
 4. `bundle_invalid` / `integrity_failed`
 - action: re-run `ui_validate_export`, inspect manifest/index/hash mismatch details.
 5. endurance `budget_result=fail`
-- action: run `node /Users/d/Projects/DevToolsTranslator/scripts/perf/run_perf_gate.mjs` and `node /Users/d/Projects/DevToolsTranslator/scripts/perf/run_endurance_suite.mjs --mode ci`, open regression triage with offending lane/check.
+- action: run `node ~/Projects/DevToolsTranslator/scripts/perf/run_perf_gate.mjs` and `node ~/Projects/DevToolsTranslator/scripts/perf/run_endurance_suite.mjs --mode ci`, open regression triage with offending lane/check.
 6. `cws_credentials_missing` / `extension_compliance_failed`
 - action: keep rollout in dry-run mode, resolve missing CWS secrets/compliance failures, rerun stage package + publish scripts.
 7. `updater_signature_missing` / `blocked_signature`

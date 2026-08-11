@@ -36,7 +36,7 @@ Date: 2026-02-22
 ## Blocking Gates
 1. Manual interactive Chrome smoke remains required for non-dry-run promotion:
 - marker format: `interactive_chrome_manual: pass|date=YYYY-MM-DD|observer=<name>`
-- source: `/Users/d/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`
+- source: `~/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`
 2. `docs/SPEC_LOCK.md` unchanged.
 
 ## Follow-up Closeout (2026-02-28)
@@ -56,14 +56,14 @@ Date: 2026-02-22
 - `release_staged_public_prerelease.mjs --dry-run` initially failed because internal desktop manifests for `0.1.0-beta.14` were missing.
 - Resolution: generated `mac/windows/linux` internal-beta dry-run desktop manifests first, then reran staged-public dry-run successfully.
 6. Added promotion readiness precheck automation:
-- script: `/Users/d/Projects/DevToolsTranslator/scripts/release/check_promotion_readiness.mjs`
+- script: `~/Projects/DevToolsTranslator/scripts/release/check_promotion_readiness.mjs`
 - package command: `pnpm run release:promotion:readiness -- --version <v> --channel staged_public_prerelease`
 - current run for `0.1.0-beta.14`: `status=blocked` with blockers:
   - `manual_smoke_missing`
   - `cws_credentials_missing`
   - `updater_signature_missing`
 - report artifact:
-  - `/Users/d/Projects/DevToolsTranslator/dist/releases/readiness/0.1.0-beta.14/promotion-readiness-staged_public_prerelease.v1.json`
+  - `~/Projects/DevToolsTranslator/dist/releases/readiness/0.1.0-beta.14/promotion-readiness-staged_public_prerelease.v1.json`
 
 ## Operator Notes
 1. For release advancement use controller scripts first, then publish scripts with generated approval file.
