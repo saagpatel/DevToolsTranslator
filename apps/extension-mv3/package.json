@@ -11,7 +11,7 @@
     "build": "tsc -p tsconfig.build.json && node -e \"const fs=require('node:fs');fs.cpSync('manifest.json','dist/manifest.json');fs.cpSync('src/popup.html','dist/popup.html');fs.cpSync('src/sidepanel.html','dist/sidepanel.html');\""
   },
   "devDependencies": {
-    "@types/chrome": "0.2.2",
+    "@types/chrome": "0.2.6",
     "typescript": "6.0.3"
   }
 }
