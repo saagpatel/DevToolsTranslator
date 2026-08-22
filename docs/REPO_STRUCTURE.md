@@ -2,7 +2,7 @@
 
 ## Proposed Tree
 ```text
-/Users/d/Projects/DevToolsTranslator
+~/Projects/DevToolsTranslator
 ├── docs/
 │   ├── PRODUCT.md
 │   ├── ARCHITECTURE.md

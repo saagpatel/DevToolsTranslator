@@ -5,9 +5,9 @@ Channels: `internal_beta`, `staged_public_prerelease`, `chrome_store_public`
 
 ## Preconditions
 1. `docs/SPEC_LOCK.md` unchanged.
-2. Canonical gates in `/Users/d/Projects/DevToolsTranslator/.codex/verify.commands` pass.
+2. Canonical gates in `~/Projects/DevToolsTranslator/.codex/verify.commands` pass.
 3. Phase 12 extras pass (desktop shell checks, release dry-runs, perf + endurance scripts).
-4. Manual Chrome smoke evidence is present in `/Users/d/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md` with dated pass entry before any non-dry-run promotion.
+4. Manual Chrome smoke evidence is present in `~/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md` with dated pass entry before any non-dry-run promotion.
    Required marker:
    `interactive_chrome_manual: pass|date=YYYY-MM-DD|observer=<name>`
 5. For staged public prerelease promotion dry-runs, internal-beta desktop manifests must exist for target version:
@@ -21,10 +21,10 @@ Channels: `internal_beta`, `staged_public_prerelease`, `chrome_store_public`
 pnpm run release:desktop:mac:dry-run -- --version 0.1.0-beta.12
 pnpm run release:desktop:windows:dry-run -- --version 0.1.0-beta.12
 pnpm run release:desktop:linux:dry-run -- --version 0.1.0-beta.12
-node /Users/d/Projects/DevToolsTranslator/scripts/release/package_extension_beta.mjs --version 0.1.0-beta.12 --dry-run
+node ~/Projects/DevToolsTranslator/scripts/release/package_extension_beta.mjs --version 0.1.0-beta.12 --dry-run
 ```
 2. CI workflow dispatch:
-- `/Users/d/Projects/DevToolsTranslator/.github/workflows/release-internal-beta.yml`
+- `~/Projects/DevToolsTranslator/.github/workflows/release-internal-beta.yml`
 - inputs: `version`, `notes`, `dry_run`
 3. Outputs:
 - platform manifests + checksums
@@ -33,7 +33,7 @@ node /Users/d/Projects/DevToolsTranslator/scripts/release/package_extension_beta
 
 ## Staged Public Prerelease Promotion
 1. Promotion workflow:
-- `/Users/d/Projects/DevToolsTranslator/.github/workflows/release-staged-public-prerelease.yml`
+- `~/Projects/DevToolsTranslator/.github/workflows/release-staged-public-prerelease.yml`
 - inputs:
   - `version`
   - `notes`
@@ -53,11 +53,11 @@ pnpm run release:staged-public:dry-run -- --version 0.1.0-beta.12 --promote-from
 ## Extension Public Rollout (Chrome Web Store)
 1. Package extension public artifacts:
 ```bash
-node /Users/d/Projects/DevToolsTranslator/scripts/release/package_extension_public.mjs --dry-run --version 0.1.0-beta.13
+node ~/Projects/DevToolsTranslator/scripts/release/package_extension_public.mjs --dry-run --version 0.1.0-beta.13
 ```
 2. Publish stage (dry-run first):
 ```bash
-node /Users/d/Projects/DevToolsTranslator/scripts/release/publish_extension_cws.mjs --dry-run --version 0.1.0-beta.13 --stage pct_5
+node ~/Projects/DevToolsTranslator/scripts/release/publish_extension_cws.mjs --dry-run --version 0.1.0-beta.13 --stage pct_5
 ```
 3. Non-dry-run requirements:
 - `CWS_CLIENT_ID`
@@ -72,27 +72,27 @@ node /Users/d/Projects/DevToolsTranslator/scripts/release/publish_extension_cws.
 ## Rollout Controller Operations (Phase 14)
 0. Run promotion readiness precheck before any non-dry-run operation:
 ```bash
-node /Users/d/Projects/DevToolsTranslator/scripts/release/check_promotion_readiness.mjs --version 0.1.0-beta.14 --channel staged_public_prerelease
+node ~/Projects/DevToolsTranslator/scripts/release/check_promotion_readiness.mjs --version 0.1.0-beta.14 --channel staged_public_prerelease
 ```
 Expected: `status=ready`. If `status=blocked`, clear blockers before proceeding.
 1. Evaluate extension stage controller decision:
 ```bash
-node /Users/d/Projects/DevToolsTranslator/scripts/release/evaluate_extension_stage.mjs --dry-run --version 0.1.0-beta.14 --stage pct_5
+node ~/Projects/DevToolsTranslator/scripts/release/evaluate_extension_stage.mjs --dry-run --version 0.1.0-beta.14 --stage pct_5
 ```
 2. Generate stage-advance approval artifact:
 ```bash
-node /Users/d/Projects/DevToolsTranslator/scripts/release/advance_extension_stage.mjs --dry-run --version 0.1.0-beta.14 --from-stage pct_5 --to-stage pct_25
+node ~/Projects/DevToolsTranslator/scripts/release/advance_extension_stage.mjs --dry-run --version 0.1.0-beta.14 --from-stage pct_5 --to-stage pct_25
 ```
 3. Evaluate updater rollout stage controller decision:
 ```bash
-node /Users/d/Projects/DevToolsTranslator/scripts/release/evaluate_updater_rollout.mjs --dry-run --version 0.1.0-beta.14 --stage pct_5 --channel public_stable
+node ~/Projects/DevToolsTranslator/scripts/release/evaluate_updater_rollout.mjs --dry-run --version 0.1.0-beta.14 --stage pct_5 --channel public_stable
 ```
 4. Generate updater rollout stage advance artifact:
 ```bash
-node /Users/d/Projects/DevToolsTranslator/scripts/release/advance_updater_rollout.mjs --dry-run --version 0.1.0-beta.14 --from-stage pct_5 --to-stage pct_25 --channel public_stable
+node ~/Projects/DevToolsTranslator/scripts/release/advance_updater_rollout.mjs --dry-run --version 0.1.0-beta.14 --from-stage pct_5 --to-stage pct_25 --channel public_stable
 ```
 5. Scheduled controller workflow:
-- `/Users/d/Projects/DevToolsTranslator/.github/workflows/release-extension-stage-controller.yml`
+- `~/Projects/DevToolsTranslator/.github/workflows/release-extension-stage-controller.yml`
 - dispatch inputs: `version`, `stage`, `dry_run`
 - scheduled runs default to dry-run for safe continuous evaluation.
 6. Non-dry-run stage advancement hard gates:
@@ -116,7 +116,7 @@ node /Users/d/Projects/DevToolsTranslator/scripts/release/advance_updater_rollou
 ## Desktop Auto-Update Feed
 1. Generate feed per channel:
 ```bash
-node /Users/d/Projects/DevToolsTranslator/scripts/release/generate_updater_feed.mjs --dry-run --version 0.1.0-beta.13 --channel staged_public_prerelease
+node ~/Projects/DevToolsTranslator/scripts/release/generate_updater_feed.mjs --dry-run --version 0.1.0-beta.13 --channel staged_public_prerelease
 ```
 2. Non-dry-run signature gate:
 - requires `UPDATER_SIGNATURE`
@@ -137,9 +137,9 @@ node /Users/d/Projects/DevToolsTranslator/scripts/release/generate_updater_feed.
 
 ## Evidence Bundle for Release Decision
 1. Manual smoke entry:
-- `/Users/d/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`
+- `~/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`
 2. Phase 12 implementation report:
-- `/Users/d/Projects/DevToolsTranslator/docs/PHASE12_RELEASE_PROMOTION_REPORT.md`
+- `~/Projects/DevToolsTranslator/docs/PHASE12_RELEASE_PROMOTION_REPORT.md`
 3. Latest promotion provenance:
 - `dist/releases/staged-public-prerelease/<version>/release-provenance.v1.json`
 4. Internal/manifests and checksums:

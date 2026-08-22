@@ -3,7 +3,7 @@
 Date: 2026-02-22
 Phase: Release Packaging and Operationalization
 
-Superseded by: `/Users/d/Projects/DevToolsTranslator/docs/PHASE11_IMPLEMENTATION_REPORT.md` for multi-platform internal-beta and perf/reliability hardening closure.
+Superseded by: `~/Projects/DevToolsTranslator/docs/PHASE11_IMPLEMENTATION_REPORT.md` for multi-platform internal-beta and perf/reliability hardening closure.
 
 ## Outcome
 1. Phase 10 release contracts, storage migration, desktop command surface, UI release/inspect flows, scripts, and CI workflow are implemented.
@@ -12,25 +12,25 @@ Superseded by: `/Users/d/Projects/DevToolsTranslator/docs/PHASE11_IMPLEMENTATION
 
 ## Implemented Deliverables
 1. Contracts:
-- `/Users/d/Projects/DevToolsTranslator/crates/dtt-core/src/lib.rs`
-- `/Users/d/Projects/DevToolsTranslator/packages/shared-types/src/index.ts`
+- `~/Projects/DevToolsTranslator/crates/dtt-core/src/lib.rs`
+- `~/Projects/DevToolsTranslator/packages/shared-types/src/index.ts`
 2. Storage migration + persistence:
-- `/Users/d/Projects/DevToolsTranslator/crates/dtt-storage/migrations/005_release_ops_v1.sql`
-- `/Users/d/Projects/DevToolsTranslator/crates/dtt-storage/src/lib.rs`
+- `~/Projects/DevToolsTranslator/crates/dtt-storage/migrations/005_release_ops_v1.sql`
+- `~/Projects/DevToolsTranslator/crates/dtt-storage/src/lib.rs`
 3. Desktop core + Tauri shell:
-- `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/lib.rs`
-- `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/release.rs`
-- `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/tauri_commands.rs`
-- `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/main.rs`
-- `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/tauri.conf.json`
+- `~/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/lib.rs`
+- `~/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/release.rs`
+- `~/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/tauri_commands.rs`
+- `~/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/src/main.rs`
+- `~/Projects/DevToolsTranslator/apps/desktop-tauri/src-tauri/tauri.conf.json`
 4. UI:
-- `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/api/client.ts`
-- `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/router.tsx`
-- `/Users/d/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/router.test.tsx`
+- `~/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/api/client.ts`
+- `~/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/router.tsx`
+- `~/Projects/DevToolsTranslator/apps/desktop-tauri/ui/src/router.test.tsx`
 5. Release automation:
-- `/Users/d/Projects/DevToolsTranslator/scripts/release/release_desktop_mac.mjs`
-- `/Users/d/Projects/DevToolsTranslator/scripts/release/package_extension_beta.mjs`
-- `/Users/d/Projects/DevToolsTranslator/.github/workflows/release-internal-beta.yml`
+- `~/Projects/DevToolsTranslator/scripts/release/release_desktop_mac.mjs`
+- `~/Projects/DevToolsTranslator/scripts/release/package_extension_beta.mjs`
+- `~/Projects/DevToolsTranslator/.github/workflows/release-internal-beta.yml`
 
 ## Verification Snapshot (Executed in this run)
 1. `pnpm --filter @dtt/shared-types typecheck`: PASS
@@ -43,7 +43,7 @@ Superseded by: `/Users/d/Projects/DevToolsTranslator/docs/PHASE11_IMPLEMENTATION
 
 ## Open Manual Gate
 1. Interactive Chrome manual smoke remains human-run:
-- tracked in `/Users/d/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`
+- tracked in `~/Projects/DevToolsTranslator/docs/PHASE6_SMOKE_EVIDENCE.md`
 - status in this shell run: `NOT RUN` (non-interactive environment).
 
 ## Release Readiness Notes
