@@ -4,13 +4,13 @@
 
 > Turn noisy DevTools activity into a clear story you can actually use.
 
-DevTools Translator captures browser events from a Chrome tab, organizes them into human-readable timelines, highlights likely issues, and exports safe share bundles for collaboration. If Chrome DevTools feels overwhelming, this gives you the same signal in plain language — built for PMs, founders, QA testers, and newer engineers.
+DevTools Translator captures browser events from a Chrome tab, organizes them into human-readable timelines, highlights likely issues, and exports share bundles for collaboration. If Chrome DevTools feels overwhelming, this gives you the same signal in plain language — built for PMs, founders, QA testers, and newer engineers.
 
 ## Features
 
-- **Timeline view** — browser events grouped into meaningful interactions, not raw log noise
+- **Timeline view** — browser events displayed chronologically as timestamp, kind, and label rows
 - **Detector engine** — built-in detectors surface likely problems and performance risks automatically
-- **Safe export bundles** — BLAKE3-integrity-checked bundles you can share without exposing sensitive data
+- **Share-safe export bundles** — BLAKE3-integrity-checked bundles with a `share_safe` profile; URL query strings remain included
 - **Chrome MV3 extension** — explicit capture consent model with tab-level control
 - **Local desktop shell** — Tauri 2 app with React UI, no cloud dependency
 
@@ -33,11 +33,14 @@ pnpm --filter @dtt/extension build
 ### Usage
 
 ```bash
-# Launch the desktop shell
+# Serve the built desktop UI in one terminal
+pnpm --filter @dtt/desktop-ui preview
+
+# Launch the desktop shell in another terminal
 cargo run -p dtt-desktop-core --features desktop_shell
 ```
 
-Then load the unpacked extension from `apps/extension-mv3/dist`, click **Find Desktop App** in the popup, connect, and start capturing.
+Then load the unpacked extension from `apps/extension-mv3/dist`, click **Find Desktop App** in the popup, connect, enable **I allow capture for this browser**, and click **Start** for a tab in the desktop app's **Live Capture** view.
 
 ## Tech Stack
 
@@ -46,7 +49,7 @@ Then load the unpacked extension from `apps/extension-mv3/dist`, click **Find De
 | Desktop runtime | Tauri 2 (Rust)                                                                                |
 | Browser capture | Chrome MV3 extension                                                                          |
 | Core engine     | Rust crates: dtt-core, dtt-storage, dtt-correlation, dtt-detectors, dtt-export, dtt-integrity |
-| Storage         | SQLite (SQLx)                                                                                 |
+| Storage         | SQLite (rusqlite)                                                                             |
 | Desktop UI      | React + TypeScript                                                                            |
 | Integrity       | BLAKE3 hashing                                                                                |
 | Build           | pnpm workspaces + Cargo workspace                                                             |

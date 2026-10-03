@@ -17,7 +17,7 @@ Portfolio truth currently marks this project as `active` with `minimum-viable` c
 | Desktop runtime | Tauri 2 (Rust)                                                                                |
 | Browser capture | Chrome MV3 extension                                                                          |
 | Core engine     | Rust crates: dtt-core, dtt-storage, dtt-correlation, dtt-detectors, dtt-export, dtt-integrity |
-| Storage         | SQLite (SQLx)                                                                                 |
+| Storage         | SQLite (rusqlite)                                                                             |
 | Desktop UI      | React + TypeScript                                                                            |
 | Integrity       | BLAKE3 hashing                                                                                |
 | Build           | pnpm workspaces + Cargo workspace                                                             |
@@ -25,11 +25,14 @@ Portfolio truth currently marks this project as `active` with `minimum-viable` c
 ## How To Run
 
 ```bash
-# Launch the desktop shell
+# After the README installation steps, serve the built UI in one terminal
+pnpm --filter @dtt/desktop-ui preview
+
+# Launch the desktop shell in another terminal
 cargo run -p dtt-desktop-core --features desktop_shell
 ```
 
-Then load the unpacked extension from `apps/extension-mv3/dist`, click **Find Desktop App** in the popup, connect, and start capturing.
+Then load the unpacked extension from `apps/extension-mv3/dist`, click **Find Desktop App** in the popup, connect, enable **I allow capture for this browser**, and click **Start** for a tab in the desktop app's **Live Capture** view.
 
 ## Known Risks
 
