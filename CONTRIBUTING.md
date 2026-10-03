@@ -14,7 +14,7 @@ Open a [GitHub Issue](../../issues/new) with:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feat/your-feature`)
 3. Make your changes with clear commit messages
-4. Run existing tests to ensure nothing breaks
+4. Run the [verification lanes](README.md#verification) appropriate to the change
 5. Open a PR with a description of what changed and why
 
 ## Development Setup
