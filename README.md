@@ -19,7 +19,7 @@ DevTools Translator captures browser events from a Chrome tab, organizes them in
 ### Prerequisites
 
 - Rust toolchain (`rustup`)
-- Node.js 20+ and pnpm
+- Node.js 24 (matching CI) and pnpm 11.1.2 (pinned in `package.json`)
 - Chrome browser
 
 ### Installation
@@ -50,6 +50,27 @@ Then load the unpacked extension from `apps/extension-mv3/dist`, click **Find De
 | Desktop UI      | React + TypeScript                                                                            |
 | Integrity       | BLAKE3 hashing                                                                                |
 | Build           | pnpm workspaces + Cargo workspace                                                             |
+
+## Verification
+
+Run from the repository root after the frozen pnpm install above. The
+[canonical command list](.codex/verify.commands) is the full JavaScript/Rust gate;
+run it with `bash .codex/scripts/run_verify_commands.sh` when the complete gate is needed.
+For a focused change, select the affected package, for example:
+
+```bash
+pnpm --filter @dtt/desktop-ui test
+cargo test --locked -p dtt-integrity
+```
+
+The canonical list covers lint, typecheck, tests, builds, Rust formatting and
+Clippy. `pnpm format:check` is an additional repository formatting check.
+Desktop-shell checks with `--features desktop_shell` need Tauri's platform
+prerequisites; the default Rust workspace gate does not prove native packaging.
+For UI/report changes, check the desktop UI with synthetic timeline fixtures and
+inspect redaction/export behavior. Loading the extension into a real browser tab,
+capturing personal traffic, release scripts, and store publication are separate
+operational lanes; do not use them as a fixture smoke test.
 
 ## License
 
